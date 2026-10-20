@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>植物管理</title>
+<style>
+:root {
+  --bg: #eef7ee; --surface: #ffffff; --text: #1f3a26; --muted: #5f7a64;
+  --accent: #2e8b57; --accent2: #7bc67e; --accent-soft: #e0f4e4;
+  --danger: #d0584e; --border: #cfe5d2;
+  --hero: linear-gradient(135deg, #2e8b57, #7bc67e);
+  --warn-bg: #fde4df; --warn-fg: #b5443b;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101a13; --surface: #1a2a1f; --text: #e3f2e6; --muted: #9ab7a0;
+    --accent: #6cc586; --accent2: #3f9a5a; --accent-soft: #22382a;
+    --danger: #f08a80; --border: #2e4a36;
+    --hero: linear-gradient(135deg, #1f5c3a, #3f7f55);
+    --warn-bg: #4a2a28; --warn-fg: #f0a097;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101a13; --surface: #1a2a1f; --text: #e3f2e6; --muted: #9ab7a0;
+  --accent: #6cc586; --accent2: #3f9a5a; --accent-soft: #22382a;
+  --danger: #f08a80; --border: #2e4a36;
+  --hero: linear-gradient(135deg, #1f5c3a, #3f7f55);
+  --warn-bg: #4a2a28; --warn-fg: #f0a097;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+:root { padding-top: env(safe-area-inset-top, 0px); }
+html[data-size="large"] body { font-size: 17px; }
+body {
+  margin: 0; min-height: 100vh; color: var(--text);
+  font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle at 10% 0%, rgba(123,198,126,0.18), transparent 40%),
+                    radial-gradient(circle at 100% 20%, rgba(255,214,102,0.12), transparent 35%);
+}
+button, select, input, textarea { font: inherit; }
+header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--hero); color: #fff; padding: 14px 16px;
+  box-shadow: 0 2px 10px rgba(46,139,87,0.25);
+}
+header h1 { font-size: 18px; margin: 0; letter-spacing: 0.02em; }
+main { padding: 16px 16px 110px; max-width: 720px; margin: 0 auto; }
+.view { display: none; }
+.view.active { display: block; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.count { color: var(--muted); font-size: 13px; }
+.row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+.hero {
+  background: var(--hero); color: #fff; border-radius: 18px; padding: 16px 18px;
+  margin-bottom: 14px; box-shadow: 0 6px 18px rgba(46,139,87,0.22); position: relative; overflow: hidden;
+}
+.hero::after { content: "🌱"; position: absolute; right: 12px; bottom: -6px; font-size: 64px; opacity: 0.25; }
+.hero .big { font-size: 20px; font-weight: bold; }
+.hero .small { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 10px; cursor: pointer; text-align: left; color: var(--text);
+  display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.card .thumb {
+  width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden;
+  background: color-mix(in srgb, var(--c, #d7f0dc) 70%, var(--surface));
+  display: flex; align-items: center; justify-content: center; font-size: 42px;
+}
+.card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card .name { font-weight: bold; font-size: 15px; }
+.card .sub { color: var(--muted); font-size: 12px; }
+.badge {
+  display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); align-self: flex-start;
+}
+.badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.chip {
+  display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: var(--c, #d7f0dc); color: #1f3a26;
+}
+button.primary, button.secondary, button.danger {
+  border-radius: 12px; padding: 10px 16px; cursor: pointer; border: 1px solid transparent; font-weight: bold;
+}
+button.primary { background: var(--hero); color: #fff; box-shadow: 0 3px 10px rgba(46,139,87,0.25); }
+button.secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+button.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+.cal-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+.cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cal-head .month { font-size: 17px; font-weight: bold; }
+.cal-head button { padding: 6px 14px; }
+.weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.weekdays div { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0; font-weight: bold; }
+.weekdays .sun, .cal-cell.sun .num { color: var(--danger); }
+.weekdays .sat, .cal-cell.sat .num { color: var(--accent); }
+.cal-cell {
+  background: var(--bg); border: 1px solid transparent; border-radius: 10px;
+  min-height: 52px; padding: 4px 2px; color: var(--text); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.cal-cell.blank { background: none; cursor: default; }
+.cal-cell .num { font-size: 14px; }
+.cal-cell:hover { border-color: var(--border); }
+.cal-cell.today { background: var(--hero); color: #fff; box-shadow: 0 3px 10px rgba(46,139,87,0.3); }
+.cal-cell.today .num { font-weight: bold; color: #fff; }
+.cal-cell.today .dot { background: #ffe066; }
+.dots { display: flex; gap: 3px; min-height: 6px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; display: flex;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 10;
+  box-shadow: 0 -4px 14px rgba(0,0,0,0.05);
+}
+.tabbar button {
+  flex: 1; background: none; border: none; padding: 8px 2px; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; cursor: pointer;
+}
+.tabbar button .ico { font-size: 19px; padding: 2px 12px; border-radius: 999px; transition: background .2s; }
+.tabbar button.active { color: var(--accent); font-weight: bold; }
+.tabbar button.active .ico { background: var(--accent-soft); }
+
+/* あゆみ（成長グラフ） */
+.seg { display: flex; gap: 6px; margin-bottom: 10px; }
+.seg button { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; }
+.seg button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: bold; }
+.chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; }
+.chart-box svg { width: 100%; height: auto; display: block; }
+.summary { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.stat { flex: 1; min-width: 100px; background: var(--accent-soft); color: var(--accent); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
+.stat b { display: block; font-size: 16px; color: var(--text); }
+
+/* 写真ギャラリー */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+.gallery button { border: none; padding: 0; background: none; cursor: pointer; border-radius: 10px; overflow: hidden; aspect-ratio: 1 / 1; }
+.gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-preview { width: 100%; max-height: 180px; object-fit: contain; border-radius: 12px; margin-top: 8px; display: none; background: var(--bg); }
+
+/* 設定 */
+.setting-group { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.setting-group h3 { font-size: 14px; margin: 0 0 10px; }
+.opt-row { display: flex; gap: 8px; }
+.opt-row button { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 10px; cursor: pointer; }
+.opt-row button.active { background: var(--hero); border-color: transparent; color: #fff; font-weight: bold; }
+textarea.export-text { width: 100%; min-height: 120px; font-size: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); padding: 8px; }
+input[type="file"] { font-size: 13px; color: var(--muted); max-width: 100%; }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(10,30,15,0.45);
+  display: none; align-items: flex-end; justify-content: center; z-index: 20;
+}
+.overlay.open { display: flex; }
+.sheet {
+  background: var(--surface); color: var(--text); width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto; border-radius: 22px 22px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+.sheet h2 { font-size: 17px; margin: 0 0 12px; color: var(--accent); }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input[type="text"], input[type="date"], input[type="number"], select, textarea {
+  width: 100%; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+}
+textarea { min-height: 70px; resize: vertical; }
+.two { display: flex; gap: 8px; }
+.two > div { flex: 1; }
+.btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+.section { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
+.section h3 { font-size: 14px; margin: 0 0 8px; color: var(--accent); }
+.item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px dashed var(--border); gap: 8px; font-size: 14px;
+}
+.item small { color: var(--muted); }
+.measure { display: inline-block; font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; margin-top: 3px; }
+.diary-entry { padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+.diary-entry .date { color: var(--muted); font-size: 12px; }
+.diary-entry img { width: 100%; border-radius: 12px; margin-top: 6px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.tabs button { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; }
+.tabs button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: bold; }
+.lightbox { background: rgba(0,0,0,0.85); align-items: center; }
+.lightbox .frame { max-width: 560px; width: 100%; padding: 12px; color: #fff; text-align: center; }
+.lightbox img { max-width: 100%; max-height: 75vh; border-radius: 14px; }
+.lightbox .cap { font-size: 13px; margin-top: 8px; opacity: 0.85; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%); background: var(--accent); color: #fff;
+  padding: 10px 18px; border-radius: 999px; font-size: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; max-width: 90%;
+}
+.toast.show { opacity: 1; }
+</style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="植物管理">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+</head>
+<body>
+<header><h1 id="pageTitle">🌿 カレンダー</h1></header>
+
+<main>
+  <section class="view active" id="view-calendar">
+    <div class="hero">
+      <div class="big" id="heroBig"></div>
+      <div class="small" id="heroSmall"></div>
+    </div>
+    <div class="cal-wrap">
+      <div class="cal-head">
+        <button class="secondary" id="prevM">‹</button>
+        <div class="month" id="monthLabel"></div>
+        <button class="secondary" id="nextM">›</button>
+      </div>
+      <div class="weekdays">
+        <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
+      </div>
+      <div class="cal-grid" id="calGrid" style="margin-top:4px;"></div>
+    </div>
+    <div class="hint" style="text-align:center;margin-top:10px;">日付をタップすると、その日の記録を見たり追加したりできます。</div>
+  </section>
+
+  <section class="view" id="view-plants">
+    <div class="row-head">
+      <div class="count" id="count"></div>
+      <button class="primary" id="addBtn">＋ 追加</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">まだ植物が登録されていません。<br>「＋ 追加」から登録してみましょう 🌱</div>
+  </section>
+
+  <section class="view" id="view-growth">
+    <div class="seg" id="gPlantWrap" style="margin-bottom:10px;">
+      <select id="gPlant" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);"></select>
+    </div>
+    <div class="seg" id="gMetric">
+      <button data-metric="height" class="active">高さ</button>
+      <button data-metric="diameter">直径</button>
+    </div>
+    <div class="seg" id="gRange">
+      <button data-range="1">1ヶ月</button>
+      <button data-range="6" class="active">6ヶ月</button>
+      <button data-range="12">12ヶ月</button>
+    </div>
+    <div class="chart-box"><div id="chart"></div></div>
+    <div class="summary" id="gSummary"></div>
+    <div class="section" id="gList"></div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="setting-group">
+      <h3>テーマ（配色）</h3>
+      <div class="opt-row" id="themeOpts">
+        <button data-theme-set="system">自動</button>
+        <button data-theme-set="light">ライト</button>
+        <button data-theme-set="dark">ダーク</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <h3>文字の大きさ</h3>
+      <div class="opt-row" id="sizeOpts">
+        <button data-size-set="normal">標準</button>
+        <button data-size-set="large">大きめ</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <h3>バックアップ</h3>
+      <div class="hint">植物・記録・写真をまとめてファイルに書き出せます。</div>
+      <div style="margin-top:10px;"><button class="primary" id="exportBtn">データを書き出す</button></div>
+      <div id="exportFallback" style="display:none;">
+        <textarea class="export-text" id="exportText" readonly></textarea>
+        <div class="hint">ファイルを保存できない環境のため、内容をコピーして保存してください。</div>
+      </div>
+      <h3 style="margin-top:18px;">読み込み</h3>
+      <input type="file" id="importFile" accept="application/json,.json">
+      <div class="hint">読み込むと、今のデータは選んだファイルの内容に置き換わります。</div>
+    </div>
+    <div class="setting-group">
+      <h3>データ</h3>
+      <div class="hint" id="dataInfo"></div>
+      <div class="hint">データはこの端末のブラウザに保存されます。</div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button data-tab="calendar" class="active"><span class="ico">📅</span>カレンダー</button>
+  <button data-tab="plants"><span class="ico">🪴</span>植物一覧</button>
+  <button data-tab="growth"><span class="ico">📈</span>あゆみ</button>
+  <button data-tab="settings"><span class="ico">⚙️</span>設定</button>
+</nav>
+
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <h2 id="editTitle">植物を追加</h2>
+    <label>名前</label>
+    <input type="text" id="fName" maxlength="30" placeholder="例：リビングのパキラ">
+    <label>種類の選び方</label>
+    <div class="tabs">
+      <button id="typeSelectTab" type="button" class="active">大分類・品種から選ぶ</button>
+      <button id="typeTextTab" type="button">自由に入力</button>
+    </div>
+    <div id="selectMode">
+      <label>大分類</label>
+      <select id="fCat"></select>
+      <label>品種</label>
+      <select id="fVar"></select>
+      <input type="text" id="fVarOther" maxlength="30" placeholder="品種名を入力" style="display:none;margin-top:8px;">
+    </div>
+    <div id="textMode" style="display:none;">
+      <input type="text" id="fTypeText" maxlength="30" placeholder="例：モンステラ・デリシオサ">
+    </div>
+    <label>購入日・迎えた日（任意）</label>
+    <input type="date" id="fAcquired">
+    <label>水やりの間隔（任意・日）</label>
+    <input type="number" id="fInterval" min="1" max="365" placeholder="例：7">
+    <div class="hint">空欄なら水やり予定は作りません。</div>
+    <label>メモ（任意）</label>
+    <textarea id="fMemo" maxlength="300"></textarea>
+    <div class="btns">
+      <button class="secondary" id="editCancel">キャンセル</button>
+      <button class="primary" id="editSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="detailOverlay">
+  <div class="sheet">
+    <div id="detailBody"></div>
+    <div class="btns">
+      <button class="danger" id="deleteBtn">削除</button>
+      <button class="secondary" id="editBtn">編集</button>
+      <button class="secondary" id="detailClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="diaryOverlay">
+  <div class="sheet">
+    <h2>成長日記を書く</h2>
+    <label>日付</label>
+    <input type="date" id="dDate">
+    <label>写真（任意）</label>
+    <input type="file" id="dPhoto" accept="image/*">
+    <label>内容</label>
+    <textarea id="dText" maxlength="500" placeholder="新芽が出た、葉の色が良いなど"></textarea>
+    <div class="btns">
+      <button class="secondary" id="diaryCancel">キャンセル</button>
+      <button class="primary" id="diarySave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="dayOverlay">
+  <div class="sheet">
+    <h2 id="dayTitle"></h2>
+    <div id="dayBody"></div>
+    <div class="btns">
+      <button class="secondary" id="dayClose">閉じる</button>
+      <button class="primary" id="dayAdd">＋ 記録する</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="logOverlay">
+  <div class="sheet">
+    <h2 id="logTitle">記録する</h2>
+    <label>日付</label>
+    <input type="date" id="lDate">
+    <label>植物</label>
+    <select id="lPlant"></select>
+    <label>内容</label>
+    <select id="lAction"></select>
+    <label>サイズ（任意・mm）</label>
+    <div class="two">
+      <div><input type="number" id="lHeight" min="0" max="99999" step="1" placeholder="高さ（mm）"></div>
+      <div><input type="number" id="lDia" min="0" max="99999" step="1" placeholder="直径（mm）"></div>
+    </div>
+    <div class="hint">高さは地面から先端まで、直径は鉢の上から見た幅や株元の太さなどを目安にどうぞ。</div>
+    <label>写真（任意）</label>
+    <input type="file" id="lPhoto" accept="image/*">
+    <img id="lPhotoPreview" class="photo-preview" alt="">
+    <div style="margin-top:6px;"><button class="secondary" id="lPhotoClear" style="padding:4px 12px;font-size:12px;display:none;">写真を外す</button></div>
+    <label>メモ（任意）</label>
+    <textarea id="lMemo" maxlength="200" placeholder="例：たっぷり与えた、葉が少し黄色い"></textarea>
+    <div class="btns">
+      <button class="secondary" id="logCancel">キャンセル</button>
+      <button class="primary" id="logSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay lightbox" id="photoOverlay">
+  <div class="frame">
+    <img id="photoImg" alt="">
+    <div class="cap" id="photoCap"></div>
+    <div class="btns" style="justify-content:center;"><button class="secondary" id="photoClose">閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="askOverlay" style="z-index:30;">
+  <div class="sheet" style="max-width:420px;border-radius:18px;margin-bottom:auto;margin-top:auto;">
+    <h2 id="askMsg" style="color:var(--text);"></h2>
+    <div class="btns">
+      <button class="secondary" id="askNo">いいえ</button>
+      <button class="danger" id="askYes" style="background:var(--danger);color:#fff;border-color:var(--danger);">はい、実行する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const MAX_PLANTS = 20;
+  const STORAGE_KEY = "plantManager.v1";
+  const OTHER = "その他";
+  const OTHER_VAR = "__other";
+  const ACTIONS = ["水やり", "植え替え", "肥料", "剪定", "様子メモ", "その他"];
+  const WD = ["日", "月", "火", "水", "木", "金", "土"];
+  const PHOTO_MAX = 480;      // 写真の最大辺(px)。容量を抑えるため小さめに圧縮
+  const PHOTO_Q = 0.7;
+
+  const CATS = {
+    "観葉植物": { icon: "🪴", color: "#d7f0dc", items: [
+      "パキラ", "モンステラ", "フィカス・ウンベラータ", "フィカス・ベンジャミン", "フィカス・ベンガレンシス", "ゴムの木",
+      "ドラセナ（幸福の木）", "ドラセナ（コーンステッキ）", "ガジュマル", "ポトス", "ユッカ", "オーガスタ",
+      "カラテア", "カポック", "シェフレラ", "アレカヤシ", "スパティフィラム", "アグラオネマ", "ディフェンバキア",
+      "サンセベリア", "ストレリチア", "ネフロレピス", "ペペロミア", "ホヤ", "マランタ", "ヘデラ（アイビー）",
+      "シンゴニウム", "アロカシア", "ピレア", "カラジウム", "ティランジア", "オリヅルラン"
+    ]},
+    "塊根植物": { icon: "🥔", color: "#f3e3d3", items: [
+      "パキポディウム（ホリダム）", "パキポディウム（グラキリス）", "アデニウム（砂漠のバラ）", "オペルクリカリア",
+      "ディオスコレア（亀甲竜）", "ブラキカリウム", "アダンソニア", "ユーフォルビア（塊根）", "ペラルゴニウム（塊根）",
+      "ビヨナ", "モリンダ", "ピーナッツカクタス（ピーナッツ状の塊根）"
+    ]},
+    "ヤシ類": { icon: "🌴", color: "#d4efe0", items: [
+      "ワシントニアヤシ", "ロベレニーヤシ", "チャメドレア（テーブルヤシ）", "カリオタ（クジャクヤシ）", "ビロウ",
+      "シュロ", "ココヤシ", "ヤシ（その他）"
+    ]},
+    "常緑樹": { icon: "🌳", color: "#d2ead6", items: [
+      "ソテツ", "キンモクセイ", "ソヨゴ", "シマトネリコ", "ゴールドクレスト",
+      "マサキ", "ツバキ", "サザンカ", "ヒイラギ", "シャリンバイ", "ヤマモモ", "オリーブ", "ベニカナメ",
+      "ツゲ", "ナンテン", "アオキ"
+    ]},
+    "多肉植物": { icon: "🌵", color: "#d6f5ea", items: [
+      "エケベリア", "セダム", "グラプトペタルム", "パキフィツム", "クラッスラ（金のなる木）", "アガベ", "アロエ",
+      "ハオルチア", "リトープス", "ユーフォルビア", "カランコエ", "センペルビブム", "ハツユキカズラ", "千代田の松"
+    ]},
+    "サボテン": { icon: "🌵", color: "#fde9c9", items: [
+      "マミラリア", "エキノカクタス（金鯱）", "エキノプシス", "ロフォフォラ（烏羽玉）", "ウチワサボテン",
+      "柱サボテン（ペニオケレウス等）", "ギムノカリキウム", "アストロフィツム", "オプンティア"
+    ]},
+    "ラン": { icon: "🌸", color: "#f8dcef", items: [
+      "ファレノプシス（胡蝶蘭）", "カトレア", "デンドロビウム", "シンビジウム（東洋蘭）", "オンシジウム", "パフィオペディラム"
+    ]},
+    "ハーブ": { icon: "🌿", color: "#dcf3c9", items: [
+      "バジル", "ミント", "ローズマリー", "タイム", "ラベンダー", "パセリ", "レモンバーム", "カモミール", "セージ",
+      "オレガノ", "ディル", "コリアンダー", "チャイブ", "ローリエ"
+    ]},
+    "野菜": { icon: "🥬", color: "#d8efd0", items: [
+      "トマト", "ミニトマト", "キュウリ", "ナス", "ピーマン", "ししとう", "オクラ", "ズッキーニ", "レタス", "ほうれん草",
+      "小松菜", "ねぎ", "にんじん", "大根", "かぶ", "じゃがいも", "さつまいも", "枝豆", "とうもろこし"
+    ]},
+    "果樹": { icon: "🍋", color: "#ffe7c2", items: [
+      "レモン", "ミカン（温州）", "キンカン", "ブルーベリー", "いちご", "イチジク", "ブドウ", "キウイ",
+      "アボカド", "グアバ", "ザクロ", "ブラックベリー"
+    ]},
+    "花（草花）": { icon: "🌼", color: "#ffd9e4", items: [
+      "ペチュニア", "パンジー", "ビオラ", "マリーゴールド", "ゼラニウム", "ガーベラ", "バラ", "アジサイ", "菊", "カーネーション",
+      "百日草", "ジニア", "サルビア", "インパチェンス", "ニチニチソウ", "シクラメン", "ポインセチア", "ハイビスカス",
+      "ブーゲンビリア", "クレマチス", "ランタナ", "ベゴニア"
+    ]},
+    "球根植物": { icon: "🌷", color: "#fff3c4", items: [
+      "チューリップ", "ヒヤシンス", "ユリ", "スイセン", "ダリア", "アネモネ", "ラナンキュラス", "グラジオラス",
+      "アマリリス", "フリージア", "クロッカス"
+    ]},
+    "シダ類": { icon: "🌿", color: "#cdeedd", items: [
+      "ネフロレピス（タマシダ）", "ビカクシダ", "ボストンファーン", "アジアンタム", "ヘゴ（木性シダ）"
+    ]},
+    "その他": { icon: "🌱", color: "#e6e9ef", items: [] }
+  };
+  const CAT_ORDER = ["サボテン", "塊根植物", "多肉植物", "観葉植物", "ヤシ類", "シダ類", "常緑樹"];
+  const CAT_NAMES = CAT_ORDER.concat(Object.keys(CATS).filter((c) => !CAT_ORDER.includes(c)));
+
+  let state = { plants: [], logs: [], settings: { theme: "system", size: "normal" } };
+  let editingId = null, detailId = null, dayKey = null, logEditId = null;
+  let logPhotoData = null;
+  let gMetric = "height";
+  let gRange = 6;
+  let viewYear, viewMonth;
+
+  const $ = (id) => document.getElementById(id);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (y, m, d) => y + "-" + pad(m + 1) + "-" + pad(d);
+  const todayStr = () => { const d = new Date(); return ymd(d.getFullYear(), d.getMonth(), d.getDate()); };
+  const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
+  const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  let askCb = null;
+  function askConfirm(msg, onYes) {
+    $("askMsg").textContent = msg;
+    askCb = onYes;
+    $("askOverlay").classList.add("open");
+  }
+  function closeAsk() {
+    $("askOverlay").classList.remove("open");
+    askCb = null;
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  // ---------- 保存・読み込み ----------
+  function migrate() {
+    state.plants.forEach((p) => {
+      if (p.category === undefined) {
+        if (CATS[p.type]) { p.category = p.type; p.type = ""; }
+        else { p.category = OTHER; }
+      }
+    });
+    state.logs.forEach((l) => { if (l.height === undefined) l.height = null; if (l.diameter === undefined) l.diameter = null; });
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && Array.isArray(d.plants)) {
+          state.plants = d.plants;
+          state.logs = Array.isArray(d.logs) ? d.logs : [];
+          if (d.settings) state.settings = Object.assign(state.settings, d.settings);
+        }
+      }
+    } catch (e) { /* 読めない場合は空で開始 */ }
+    migrate();
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
+    catch (e) { toast("容量がいっぱいです。写真を減らすか、古い記録を整理してください"); return false; }
+  }
+  function storageKB() {
+    return Math.round(JSON.stringify(state).length / 1024);
+  }
+
+  function applySettings() {
+    const s = state.settings;
+    document.documentElement.dataset.theme = s.theme === "system" ? "" : s.theme;
+    document.documentElement.dataset.size = s.size;
+    document.querySelectorAll("[data-theme-set]").forEach((b) => b.classList.toggle("active", b.dataset.themeSet === s.theme));
+    document.querySelectorAll("[data-size-set]").forEach((b) => b.classList.toggle("active", b.dataset.sizeSet === s.size));
+  }
+
+  // ---------- ヘルパー ----------
+  function catOf(p) { return CATS[p.category] ? p.category : OTHER; }
+  function plantLabel(p) {
+    const c = catOf(p);
+    if (p.type) return c === OTHER ? p.type : c + " ・ " + p.type;
+    return c === OTHER ? "種類未設定" : c;
+  }
+  function plantStyle(p) { return "--c:" + CATS[catOf(p)].color + ";"; }
+  function nextWaterDate(p) {
+    if (!p.waterInterval) return null;
+    const last = p.lastWatered || p.createdAt || todayStr();
+    const base = new Date(last + "T00:00:00");
+    base.setDate(base.getDate() + p.waterInterval);
+    return ymd(base.getFullYear(), base.getMonth(), base.getDate());
+  }
+  function plantName(id) {
+    const p = state.plants.find((x) => x.id === id);
+    return p ? p.name : "（削除済み）";
+  }
+  function measureText(l) {
+    const parts = [];
+    if (l.height) parts.push("高さ " + l.height + "mm");
+    if (l.diameter) parts.push("直径 " + l.diameter + "mm");
+    return parts.join(" ・ ");
+  }
+  function latestLogPhoto(plantId) {
+    const withPhoto = state.logs.filter((l) => l.plantId === plantId && l.photo)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+    return withPhoto.length ? withPhoto[0].photo : null;
+  }
+  function resizeImage(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("img"));
+        img.onload = () => {
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const c = document.createElement("canvas");
+          c.width = Math.max(1, Math.round(img.width * scale));
+          c.height = Math.max(1, Math.round(img.height * scale));
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL("image/jpeg", quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---------- タブ ----------
+  const TITLES = { calendar: "🌿 カレンダー", plants: "🌿 植物一覧", growth: "🌿 あゆみ", settings: "🌿 設定" };
+  function showTab(name) {
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + name));
+    document.querySelectorAll(".tabbar button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+    $("pageTitle").textContent = TITLES[name];
+    window.scrollTo(0, 0);
+    renderAll();
+  }
+
+  // ---------- ヒーロー・カレンダー ----------
+  function renderHero() {
+    const today = todayStr();
+    const due = state.plants.filter((p) => {
+      const n = nextWaterDate(p);
+      return n && daysBetween(today, n) <= 0;
+    }).length;
+    const todayLogs = state.logs.filter((l) => l.date === today).length;
+    if (state.plants.length === 0) {
+      $("heroBig").textContent = "ようこそ 🌱";
+      $("heroSmall").textContent = "植物を登録して、お世話の記録を始めましょう。";
+    } else {
+      $("heroBig").textContent = due > 0 ? "今日の水やり：" + due + "株" : "今日の水やりはありません";
+      $("heroSmall").textContent = "今日の記録 " + todayLogs + "件 ・ 登録 " + state.plants.length + "株";
+    }
+  }
+  function renderCalendar() {
+    $("monthLabel").textContent = viewYear + "年" + (viewMonth + 1) + "月";
+    const first = new Date(viewYear, viewMonth, 1).getDay();
+    const days = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const today = todayStr();
+    const counts = {};
+    state.logs.forEach((l) => { counts[l.date] = (counts[l.date] || 0) + 1; });
+    let html = "";
+    for (let i = 0; i < first; i++) html += '<div class="cal-cell blank"></div>';
+    for (let d = 1; d <= days; d++) {
+      const key = ymd(viewYear, viewMonth, d);
+      const wd = new Date(viewYear, viewMonth, d).getDay();
+      const cls = ["cal-cell"];
+      if (key === today) cls.push("today");
+      if (wd === 0) cls.push("sun");
+      if (wd === 6) cls.push("sat");
+      const dots = Math.min(counts[key] || 0, 3);
+      let dotHtml = "";
+      for (let i = 0; i < dots; i++) dotHtml += '<span class="dot"></span>';
+      html += '<button class="' + cls.join(" ") + '" data-date="' + key + '">' +
+        '<span class="num">' + d + '</span><span class="dots">' + dotHtml + '</span></button>';
+    }
+    $("calGrid").innerHTML = html;
+  }
+  function moveMonth(delta) {
+    const d = new Date(viewYear, viewMonth + delta, 1);
+    viewYear = d.getFullYear();
+    viewMonth = d.getMonth();
+    renderCalendar();
+  }
+
+  // ---------- 植物一覧 ----------
+  function renderPlants() {
+    const today = todayStr();
+    $("count").textContent = "登録数：" + state.plants.length + " / " + MAX_PLANTS;
+    $("addBtn").disabled = state.plants.length >= MAX_PLANTS;
+    $("empty").style.display = state.plants.length ? "none" : "block";
+    $("grid").innerHTML = state.plants.map((p) => {
+      const next = nextWaterDate(p);
+      let badge = "";
+      if (next) {
+        const diff = daysBetween(today, next);
+        if (diff < 0) badge = '<span class="badge warn">水やり ' + (-diff) + '日超過</span>';
+        else if (diff === 0) badge = '<span class="badge warn">今日水やり</span>';
+        else badge = '<span class="badge">あと' + diff + '日</span>';
+      }
+      const photo = p.photo || latestLogPhoto(p.id);
+      const thumb = photo ? '<img src="' + photo + '" alt="">' : CATS[catOf(p)].icon;
+      return '<button class="card" data-id="' + p.id + '" style="' + plantStyle(p) + '">' +
+        '<div class="thumb">' + thumb + '</div>' +
+        '<div class="name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="sub">' + escapeHtml(plantLabel(p)) + '</div>' + badge + '</button>';
+    }).join("");
+  }
+
+  // ---------- あゆみ（成長グラフ） ----------
+  function renderGrowthSelect() {
+    const sel = $("gPlant");
+    const prev = sel.value;
+    sel.innerHTML = state.plants.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>').join("");
+    if (state.plants.some((p) => p.id === prev)) sel.value = prev;
+    document.querySelectorAll("#gMetric button").forEach((b) => b.classList.toggle("active", b.dataset.metric === gMetric));
+    document.querySelectorAll("#gRange button").forEach((b) => b.classList.toggle("active", Number(b.dataset.range) === gRange));
+  }
+  function renderGrowth() {
+    renderGrowthSelect();
+    const p = state.plants.find((x) => x.id === $("gPlant").value);
+    if (!p) {
+      $("chart").innerHTML = '<div class="empty">植物を登録すると、ここで成長の推移を確認できます。</div>';
+      $("gSummary").innerHTML = ""; $("gList").innerHTML = "";
+      return;
+    }
+    const now = new Date();
+    const cutoffDate = new Date(now.getFullYear(), now.getMonth() - gRange, now.getDate());
+    const cutoff = ymd(cutoffDate.getFullYear(), cutoffDate.getMonth(), cutoffDate.getDate());
+    const pts = state.logs
+      .filter((l) => l.plantId === p.id && l[gMetric] && l.date >= cutoff)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    const label = gMetric === "height" ? "高さ" : "直径";
+
+    if (pts.length === 0) {
+      $("chart").innerHTML = '<div class="empty" style="padding:30px 0;">直近' + gRange + 'ヶ月の「' + label + '」の記録はありません。<br>記録画面で' + label + 'を入れると、ここにグラフが表示されます。</div>';
+      $("gSummary").innerHTML = "";
+      $("gList").innerHTML = "";
+      return;
+    }
+
+    // SVGで折れ線グラフを描く（外部ライブラリ不要）
+    const W = 320, H = 210, padL = 48, padR = 14, padT = 14, padB = 30;
+    const vals = pts.map((l) => l[gMetric]);
+    const maxV = Math.max.apply(null, vals);
+    const yMax = maxV > 0 ? Math.ceil(maxV * 1.15) : 10;
+    const times = pts.map((l) => new Date(l.date + "T00:00:00").getTime());
+    // X軸は選んだ期間全体（開始日〜今日）を使う
+    const t0 = cutoffDate.getTime();
+    const t1 = new Date(ymd(now.getFullYear(), now.getMonth(), now.getDate()) + "T00:00:00").getTime();
+    const xOf = (t) => padL + (W - padL - padR) * ((t - t0) / Math.max(1, t1 - t0));
+    const yOf = (v) => padT + (H - padT - padB) * (1 - v / yMax);
+
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+    for (let i = 0; i <= 4; i++) {
+      const v = Math.round(yMax * i / 4);
+      const y = yOf(v);
+      svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y + '" y2="' + y + '" style="stroke:var(--border)" stroke-width="1"/>';
+      svg += '<text x="' + (padL - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" style="fill:var(--muted)">' + v + '</text>';
+    }
+    svg += '<text x="' + padL + '" y="' + (padT - 3) + '" font-size="10" style="fill:var(--muted)">mm</text>';
+    const coords = pts.map((l, i) => xOf(times[i]).toFixed(1) + "," + yOf(l[gMetric]).toFixed(1));
+    if (pts.length > 1) svg += '<polyline points="' + coords.join(" ") + '" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--accent)"/>';
+    pts.forEach((l, i) => {
+      const x = xOf(times[i]), y = yOf(l[gMetric]);
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" style="fill:var(--accent);stroke:var(--surface)" stroke-width="2"/>';
+    });
+    const fmt = (d) => d.slice(5).replace("-", "/");
+    svg += '<text x="' + padL + '" y="' + (H - 8) + '" font-size="10" style="fill:var(--muted)">' + fmt(cutoff) + '</text>';
+    svg += '<text x="' + (W - padR) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" style="fill:var(--muted)">' + fmt(ymd(now.getFullYear(), now.getMonth(), now.getDate())) + '</text>';
+    svg += '</svg>';
+    $("chart").innerHTML = svg;
+
+    const first = vals[0], last = vals[vals.length - 1];
+    const diff = last - first;
+    $("gSummary").innerHTML =
+      '<div class="stat">最新<b>' + last + 'mm</b></div>' +
+      '<div class="stat">記録回数<b>' + pts.length + '回</b></div>' +
+      '<div class="stat">' + label + 'の変化<b>' + (diff >= 0 ? "+" : "") + diff + 'mm</b></div>';
+
+    $("gList").innerHTML = '<h3>記録一覧</h3>' + pts.slice().reverse().map((l) =>
+      '<div class="item"><span>' + escapeHtml(l.date) + '</span><span class="measure">' + escapeHtml(measureText(l) || label + ' ' + l[gMetric] + 'mm') + '</span></div>'
+    ).join("");
+  }
+
+  // ---------- 設定 ----------
+  function renderSettings() {
+    $("dataInfo").textContent = "登録 " + state.plants.length + "株・記録 " + state.logs.length + "件・保存容量 約" + storageKB() + "KB";
+    applySettings();
+  }
+  function renderAll() { renderHero(); renderCalendar(); renderPlants(); renderGrowth(); renderSettings(); }
+
+  // ---------- 植物の追加・編集 ----------
+  function fillCategorySelect(selected) {
+    $("fCat").innerHTML = CAT_NAMES.map((c) => '<option value="' + c + '">' + CATS[c].icon + " " + c + '</option>').join("");
+    $("fCat").value = CATS[selected] ? selected : "観葉植物";
+    fillVarSelect(null);
+  }
+  function fillVarSelect(selectedVar) {
+    const items = CATS[$("fCat").value].items;
+    $("fVar").innerHTML = items.map((v) => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join("") +
+      '<option value="' + OTHER_VAR + '">その他（自由入力）</option>';
+    if (selectedVar && items.includes(selectedVar)) $("fVar").value = selectedVar;
+    else if (selectedVar) { $("fVar").value = OTHER_VAR; $("fVarOther").value = selectedVar; }
+    else $("fVar").value = items[0] || OTHER_VAR;
+    toggleVarOther();
+  }
+  function toggleVarOther() {
+    $("fVarOther").style.display = $("fVar").value === OTHER_VAR ? "block" : "none";
+  }
+  function setTypeMode(mode) {
+    const isSelect = mode === "select";
+    $("typeSelectTab").classList.toggle("active", isSelect);
+    $("typeTextTab").classList.toggle("active", !isSelect);
+    $("selectMode").style.display = isSelect ? "block" : "none";
+    $("textMode").style.display = isSelect ? "none" : "block";
+  }
+  function openEdit(p) {
+    editingId = p ? p.id : null;
+    $("editTitle").textContent = p ? "植物を編集" : "植物を追加";
+    $("fName").value = p ? p.name : "";
+    $("fVarOther").value = "";
+    if (p && catOf(p) !== OTHER) {
+      fillCategorySelect(catOf(p));
+      fillVarSelect(p.type || null);
+      setTypeMode("select");
+    } else if (p && p.type) {
+      fillCategorySelect("観葉植物");
+      fillVarSelect(null);
+      $("fTypeText").value = p.type;
+      setTypeMode("text");
+    } else {
+      fillCategorySelect("観葉植物");
+      fillVarSelect(null);
+      $("fTypeText").value = "";
+      setTypeMode("select");
+    }
+    $("fAcquired").value = p && p.acquired ? p.acquired : "";
+    $("fInterval").value = p && p.waterInterval ? p.waterInterval : "";
+    $("fMemo").value = p && p.memo ? p.memo : "";
+    $("editOverlay").classList.add("open");
+  }
+  function saveEdit() {
+    const name = $("fName").value.trim();
+    if (!name) { toast("名前を入力してください"); return; }
+    let category, type;
+    if ($("typeSelectTab").classList.contains("active")) {
+      category = $("fCat").value;
+      type = $("fVar").value === OTHER_VAR ? $("fVarOther").value.trim() : $("fVar").value;
+      if (category === OTHER && !type) { toast("品種名を入力してください"); return; }
+    } else {
+      category = OTHER;
+      type = $("fTypeText").value.trim();
+    }
+    const intervalRaw = $("fInterval").value.trim();
+    let waterInterval = null;
+    if (intervalRaw !== "") {
+      const n = Math.floor(Number(intervalRaw));
+      if (!Number.isFinite(n) || n < 1 || n > 365) { toast("水やり間隔は1〜365の数字で入力してください"); return; }
+      waterInterval = n;
+    }
+    const data = {
+      name, category, type,
+      acquired: $("fAcquired").value || null,
+      waterInterval,
+      memo: $("fMemo").value.trim(),
+    };
+    if (editingId) {
+      const p = state.plants.find((x) => x.id === editingId);
+      if (p) Object.assign(p, data);
+      toast("更新しました");
+    } else {
+      if (state.plants.length >= MAX_PLANTS) { toast("登録は最大" + MAX_PLANTS + "株までです"); return; }
+      state.plants.push(Object.assign({ id: uid(), photo: null, lastWatered: null, diary: [], createdAt: todayStr() }, data));
+      toast("登録しました");
+    }
+    if (!save()) return;
+    closeOverlay("editOverlay");
+    renderAll();
+    if (detailId) openDetail(detailId);
+  }
+
+  // ---------- 植物の詳細 ----------
+  function openDetail(id) {
+    detailId = id;
+    const p = state.plants.find((x) => x.id === id);
+    if (!p) { closeOverlay("detailOverlay"); return; }
+    const next = nextWaterDate(p);
+    const diary = (p.diary || []).slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+    const diaryHtml = diary.length
+      ? diary.map((d) => '<div class="diary-entry"><div class="date">' + escapeHtml(d.date) + '</div>' +
+          (d.photo ? '<img src="' + d.photo + '" alt="">' : '') +
+          '<div>' + escapeHtml(d.text) + '</div>' +
+          '<button class="secondary" style="margin-top:6px;padding:4px 10px;font-size:12px;" data-del-diary="' + d.id + '">この日記を削除</button></div>').join("")
+      : '<div class="hint">まだ日記はありません。</div>';
+    const plantLogs = state.logs.filter((l) => l.plantId === p.id).sort((a, b) => (a.date < b.date ? 1 : -1));
+    const logHtml = plantLogs.length
+      ? plantLogs.slice(0, 8).map((l) => {
+          const m = measureText(l);
+          return '<div class="item"><span>' + escapeHtml(l.date) + ' ・ ' + escapeHtml(l.action) +
+            (m ? '<br><span class="measure">' + escapeHtml(m) + '</span>' : '') +
+            (l.memo ? '<br><small>' + escapeHtml(l.memo) + '</small>' : '') + '</span></div>';
+        }).join("")
+      : '<div class="hint">まだ記録はありません。</div>';
+
+    // 写真ギャラリー（記録・日記・植物の写真）
+    const photos = [];
+    if (p.photo) photos.push({ src: p.photo, cap: "登録時の写真" });
+    plantLogs.forEach((l) => { if (l.photo) photos.push({ src: l.photo, cap: l.date + " ・ " + l.action }); });
+    (p.diary || []).forEach((d) => { if (d.photo) photos.push({ src: d.photo, cap: d.date + " ・ 日記" }); });
+    const galleryHtml = photos.length
+      ? '<div class="gallery">' + photos.map((ph, i) =>
+          '<button data-photo="' + i + '"><img src="' + ph.src + '" alt=""></button>').join("") + '</div>'
+      : '<div class="hint">まだ写真はありません。記録や日記に写真を付けると、ここに並びます。</div>';
+
+    $("detailBody").innerHTML =
+      '<h2>' + escapeHtml(p.name) + '</h2>' +
+      '<span class="chip" style="' + plantStyle(p) + '">' + CATS[catOf(p)].icon + ' ' + escapeHtml(plantLabel(p)) + '</span>' +
+      (p.acquired ? '<div class="hint">迎えた日 ' + escapeHtml(p.acquired) + '</div>' : '') +
+
+      '<div class="section"><h3>写真</h3>' + galleryHtml + '</div>' +
+
+      '<div class="section"><h3>水やり</h3>' +
+        (p.waterInterval
+          ? '<div class="item"><span>' + p.waterInterval + '日ごと</span><small>次回 ' + (next || "-") + '</small></div>' +
+            '<div class="item"><span>最終水やり</span><small>' + (p.lastWatered || "未記録") + '</small></div>' +
+            '<div style="margin-top:8px;"><button class="primary" id="waterBtn">今日水やりした</button></div>'
+          : '<div class="hint">水やり予定は設定されていません（編集から間隔を入れると作成できます）。</div>') +
+      '</div>' +
+
+      '<div class="section"><h3>記録</h3>' +
+        '<div style="margin-bottom:8px;"><button class="secondary" id="addLogBtn">＋ 記録する</button></div>' +
+        logHtml +
+      '</div>' +
+
+      '<div class="section diary"><h3>成長日記</h3>' +
+        '<div style="margin-bottom:8px;"><button class="secondary" id="addDiaryBtn">＋ 日記を書く</button></div>' +
+        diaryHtml +
+      '</div>' +
+
+      (p.memo ? '<div class="section"><h3>メモ</h3><div style="font-size:14px;white-space:pre-wrap;">' + escapeHtml(p.memo) + '</div></div>' : '') +
+
+      '<div class="section"><h3>アイコン写真を変更</h3>' +
+        '<input type="file" id="photoInput" accept="image/*">' +
+        '<div class="hint">一覧のアイコンとして表示されます（記録の写真より優先）。</div></div>';
+
+    $("detailOverlay").classList.add("open");
+
+    const wb = $("waterBtn");
+    if (wb) wb.onclick = () => {
+      p.lastWatered = todayStr();
+      state.logs.push({ id: uid(), date: todayStr(), plantId: p.id, action: "水やり", memo: "", height: null, diameter: null });
+      if (save()) { renderAll(); openDetail(id); toast("水やりを記録しました 💧"); }
+    };
+    $("addLogBtn").onclick = () => openLog(todayStr(), null, p.id);
+    $("addDiaryBtn").onclick = () => openDiary();
+    $("photoInput").onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        p.photo = await resizeImage(f, PHOTO_MAX, PHOTO_Q);
+        if (save()) { renderAll(); openDetail(id); toast("写真を変更しました"); }
+      } catch (err) { toast("写真を読み込めませんでした"); }
+    };
+    $("detailBody").querySelectorAll("[data-photo]").forEach((b) => {
+      b.onclick = () => openPhoto(photos[Number(b.dataset.photo)]);
+    });
+    $("detailBody").querySelectorAll("[data-del-diary]").forEach((btn) => {
+      btn.onclick = () => {
+        askConfirm("この日記を削除しますか？", () => {
+          p.diary = p.diary.filter((d) => d.id !== btn.dataset.delDiary);
+          if (save()) { openDetail(id); toast("日記を削除しました"); }
+        });
+      };
+    });
+  }
+
+  function openPhoto(ph) {
+    if (!ph) return;
+    $("photoImg").src = ph.src;
+    $("photoCap").textContent = ph.cap;
+    $("photoOverlay").classList.add("open");
+  }
+
+  // ---------- 日記 ----------
+  function openDiary() {
+    $("dDate").value = todayStr();
+    $("dText").value = "";
+    $("dPhoto").value = "";
+    $("diaryOverlay").classList.add("open");
+  }
+  async function saveDiary() {
+    const p = state.plants.find((x) => x.id === detailId);
+    if (!p) return;
+    const text = $("dText").value.trim();
+    const file = $("dPhoto").files[0];
+    if (!text && !file) { toast("内容か写真のどちらかを入れてください"); return; }
+    let photo = null;
+    if (file) {
+      try { photo = await resizeImage(file, PHOTO_MAX, PHOTO_Q); }
+      catch (e) { toast("写真を読み込めませんでした"); return; }
+    }
+    p.diary = p.diary || [];
+    p.diary.push({ id: uid(), date: $("dDate").value || todayStr(), text, photo });
+    if (!save()) return;
+    closeOverlay("diaryOverlay");
+    openDetail(p.id);
+    toast("日記を保存しました");
+  }
+
+  // ---------- 日ごとの記録 ----------
+  function openDay(key) {
+    dayKey = key;
+    renderDay();
+    $("dayOverlay").classList.add("open");
+  }
+  function renderDay() {
+    const [y, m, d] = dayKey.split("-").map(Number);
+    $("dayTitle").textContent = y + "年" + m + "月" + d + "日（" + WD[new Date(y, m - 1, d).getDay()] + "）";
+    const list = state.logs.filter((l) => l.date === dayKey);
+    $("dayBody").innerHTML = list.length
+      ? list.map((l) => {
+          const p = state.plants.find((x) => x.id === l.plantId);
+          const icon = p ? CATS[catOf(p)].icon : "🌱";
+          const m = measureText(l);
+          return '<div class="item"><span>' + icon + ' <b>' + escapeHtml(plantName(l.plantId)) + '</b> ・ ' + escapeHtml(l.action) +
+            (m ? '<br><span class="measure">' + escapeHtml(m) + '</span>' : '') +
+            (l.memo ? '<br><small>' + escapeHtml(l.memo) + '</small>' : '') +
+            (l.photo ? '<br><img src="' + l.photo + '" alt="" style="width:100%;max-width:220px;border-radius:10px;margin-top:6px;">' : '') +
+            '</span>' +
+            '<span style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+            '<button class="secondary" style="padding:4px 10px;font-size:12px;" data-edit-log="' + l.id + '">編集</button>' +
+            '<button class="danger" style="padding:4px 10px;font-size:12px;" data-del-log="' + l.id + '">削除</button></span></div>';
+        }).join("")
+      : '<div class="hint">この日の記録はまだありません。</div>';
+
+    $("dayBody").querySelectorAll("[data-edit-log]").forEach((b) => {
+      b.onclick = () => {
+        const log = state.logs.find((x) => x.id === b.dataset.editLog);
+        if (log) openLog(log.date, log, null);
+      };
+    });
+    $("dayBody").querySelectorAll("[data-del-log]").forEach((b) => {
+      b.onclick = () => {
+        askConfirm("この記録を削除しますか？", () => {
+          state.logs = state.logs.filter((x) => x.id !== b.dataset.delLog);
+          if (save()) { renderAll(); renderDay(); toast("削除しました"); }
+        });
+      };
+    });
+  }
+
+  // ---------- 記録の追加・編集 ----------
+  function setLogPhoto(data) {
+    logPhotoData = data;
+    if (data) {
+      $("lPhotoPreview").src = data;
+      $("lPhotoPreview").style.display = "block";
+      $("lPhotoClear").style.display = "inline-block";
+    } else {
+      $("lPhotoPreview").removeAttribute("src");
+      $("lPhotoPreview").style.display = "none";
+      $("lPhotoClear").style.display = "none";
+    }
+  }
+  function openLog(date, log, presetPlantId) {
+    if (state.plants.length === 0) { toast("先に植物を登録してください"); return; }
+    logEditId = log ? log.id : null;
+    $("logTitle").textContent = log ? "記録を編集" : "記録する";
+    $("lDate").value = date;
+    $("lPlant").innerHTML = state.plants.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>').join("");
+    $("lPlant").value = log ? log.plantId : (presetPlantId || state.plants[0].id);
+    $("lAction").innerHTML = ACTIONS.map((a) => '<option value="' + a + '">' + a + '</option>').join("");
+    $("lAction").value = log ? log.action : "水やり";
+    $("lHeight").value = log && log.height ? log.height : "";
+    $("lDia").value = log && log.diameter ? log.diameter : "";
+    $("lMemo").value = log ? log.memo : "";
+    $("lPhoto").value = "";
+    setLogPhoto(log && log.photo ? log.photo : null);
+    $("logOverlay").classList.add("open");
+  }
+  function parseMm(id) {
+    const raw = $(id).value.trim();
+    if (raw === "") return { ok: true, value: null };
+    const n = Math.round(Number(raw));
+    if (!Number.isFinite(n) || n < 0 || n > 99999) return { ok: false };
+    return { ok: true, value: n || null };
+  }
+  function saveLog() {
+    const plantId = $("lPlant").value;
+    if (!plantId) { toast("植物を選んでください"); return; }
+    const h = parseMm("lHeight");
+    const dia = parseMm("lDia");
+    if (!h.ok || !dia.ok) { toast("サイズは0〜99999mmの数字で入力してください"); return; }
+    const date = $("lDate").value || dayKey || todayStr();
+    const action = $("lAction").value;
+    const memo = $("lMemo").value.trim();
+    const data = { date, plantId, action, memo, height: h.value, diameter: dia.value, photo: logPhotoData || null };
+    if (logEditId) {
+      const log = state.logs.find((x) => x.id === logEditId);
+      if (log) Object.assign(log, data);
+      toast("更新しました");
+    } else {
+      state.logs.push(Object.assign({ id: uid() }, data));
+      toast("記録しました 🌱");
+    }
+    if (action === "水やり") {
+      const p = state.plants.find((x) => x.id === plantId);
+      if (p && (!p.lastWatered || date > p.lastWatered)) p.lastWatered = date;
+    }
+    if (!save()) return;
+    closeOverlay("logOverlay");
+    dayKey = date;
+    renderAll();
+    if (detailId) openDetail(detailId);
+    if (!$("dayOverlay").classList.contains("open")) openDay(date);
+    else renderDay();
+  }
+
+  // ---------- バックアップ ----------
+  async function getCap(name) {
+    try {
+      if (window.claude && typeof window.claude.use === "function") return await window.claude.use(name);
+    } catch (e) { /* 利用できない環境 */ }
+    return null;
+  }
+  async function exportData() {
+    const payload = {
+      app: "plantManager", version: 2, exportedAt: new Date().toISOString(),
+      data: { plants: state.plants, logs: state.logs, settings: state.settings }
+    };
+    const json = JSON.stringify(payload);
+    const filename = "plant-manager-" + todayStr() + ".json";
+    const dl = await getCap("downloads");
+    if (dl) {
+      try {
+        await dl.save({ filename, data: json });
+        toast("書き出しました 💾");
+        return;
+      } catch (e) {
+        if (e && e.code === "declined") return;
+      }
+    }
+    $("exportText").value = json;
+    $("exportFallback").style.display = "block";
+    toast("ファイルを保存できないため、内容を表示しました");
+  }
+  async function importFile(e) {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    let obj;
+    try { obj = JSON.parse(await f.text()); } catch (err) { toast("ファイルを読み込めませんでした"); return; }
+    const d = obj && obj.data;
+    if (!d || !Array.isArray(d.plants) || !Array.isArray(d.logs)) { toast("植物管理のバックアップファイルではありません"); return; }
+    askConfirm("現在のデータを、選んだファイルの内容に置き換えます。よろしいですか？", () => {
+      state.plants = d.plants.slice(0, MAX_PLANTS);
+      state.logs = d.logs;
+      if (d.settings) state.settings = Object.assign({ theme: "system", size: "normal" }, d.settings);
+      migrate();
+      if (save()) { applySettings(); renderAll(); toast("読み込みました"); }
+    });
+  }
+
+  function closeOverlay(id) {
+    $(id).classList.remove("open");
+    if (id === "detailOverlay") detailId = null;
+  }
+
+  // ---------- イベント ----------
+  document.querySelector(".tabbar").onclick = (e) => {
+    const b = e.target.closest("[data-tab]");
+    if (b) showTab(b.dataset.tab);
+  };
+  $("prevM").onclick = () => moveMonth(-1);
+  $("nextM").onclick = () => moveMonth(1);
+  $("calGrid").onclick = (e) => {
+    const c = e.target.closest("[data-date]");
+    if (c) openDay(c.dataset.date);
+  };
+
+  $("addBtn").onclick = () => openEdit(null);
+  $("grid").onclick = (e) => {
+    const card = e.target.closest(".card");
+    if (card) openDetail(card.dataset.id);
+  };
+
+  $("gPlant").onchange = renderGrowth;
+  $("gRange").onclick = (e) => {
+    const b = e.target.closest("[data-range]");
+    if (!b) return;
+    gRange = Number(b.dataset.range);
+    renderGrowth();
+  };
+  $("gMetric").onclick = (e) => {
+    const b = e.target.closest("[data-metric]");
+    if (!b) return;
+    gMetric = b.dataset.metric;
+    renderGrowth();
+  };
+
+  $("themeOpts").onclick = (e) => {
+    const b = e.target.closest("[data-theme-set]");
+    if (!b) return;
+    state.settings.theme = b.dataset.themeSet;
+    save(); applySettings();
+  };
+  $("sizeOpts").onclick = (e) => {
+    const b = e.target.closest("[data-size-set]");
+    if (!b) return;
+    state.settings.size = b.dataset.sizeSet;
+    save(); applySettings();
+  };
+  $("exportBtn").onclick = exportData;
+  $("importFile").onchange = importFile;
+
+  $("fCat").onchange = () => fillVarSelect(null);
+  $("fVar").onchange = toggleVarOther;
+  $("editCancel").onclick = () => closeOverlay("editOverlay");
+  $("editSave").onclick = saveEdit;
+  $("typeSelectTab").onclick = () => setTypeMode("select");
+  $("typeTextTab").onclick = () => setTypeMode("text");
+
+  $("detailClose").onclick = () => closeOverlay("detailOverlay");
+  $("editBtn").onclick = () => {
+    const p = state.plants.find((x) => x.id === detailId);
+    closeOverlay("detailOverlay");
+    if (p) openEdit(p);
+  };
+  $("deleteBtn").onclick = () => {
+    const p = state.plants.find((x) => x.id === detailId);
+    if (!p) return;
+    askConfirm("「" + p.name + "」を削除しますか？日記と記録も一緒に消えます。", () => {
+      state.plants = state.plants.filter((x) => x.id !== p.id);
+      state.logs = state.logs.filter((x) => x.plantId !== p.id);
+      if (save()) {
+        closeOverlay("detailOverlay");
+        renderAll();
+        toast("削除しました");
+      }
+    });
+  };
+
+  $("askNo").onclick = closeAsk;
+  $("askYes").onclick = () => { const cb = askCb; closeAsk(); if (cb) cb(); };
+  $("askOverlay").addEventListener("click", (e) => { if (e.target.id === "askOverlay") closeAsk(); });
+
+  $("diaryCancel").onclick = () => closeOverlay("diaryOverlay");
+  $("diarySave").onclick = saveDiary;
+
+  $("dayClose").onclick = () => closeOverlay("dayOverlay");
+  $("dayAdd").onclick = () => openLog(dayKey, null, null);
+  $("logCancel").onclick = () => closeOverlay("logOverlay");
+  $("logSave").onclick = saveLog;
+  $("lPhoto").onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try { setLogPhoto(await resizeImage(f, PHOTO_MAX, PHOTO_Q)); }
+    catch (err) { toast("写真を読み込めませんでした"); }
+  };
+  $("lPhotoClear").onclick = () => { setLogPhoto(null); $("lPhoto").value = ""; };
+  $("photoClose").onclick = () => closeOverlay("photoOverlay");
+
+  ["editOverlay", "detailOverlay", "diaryOverlay", "dayOverlay", "logOverlay", "photoOverlay"].forEach((id) => {
+    $(id).addEventListener("click", (e) => {
+      if (e.target.id === id) closeOverlay(id);
+    });
+  });
+
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  load();
+  applySettings();
+  renderAll();
+})();
+</script>
+</body>
+</html>
