@@ -346,6 +346,14 @@ textarea { min-height: 70px; resize: vertical; }
   </div>
 </div>
 
+<div class="overlay" id="historyOverlay">
+  <div class="sheet">
+    <h2 id="historyTitle"></h2>
+    <div id="historyBody"></div>
+    <div class="btns"><button class="secondary" id="historyClose">閉じる</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="diaryOverlay">
   <div class="sheet">
     <h2>成長日記を書く</h2>
@@ -889,14 +897,17 @@ textarea { min-height: 70px; resize: vertical; }
           '<button class="secondary" style="margin-top:6px;padding:4px 10px;font-size:12px;" data-del-diary="' + d.id + '">この日記を削除</button></div>').join("")
       : '<div class="hint">まだ日記はありません。</div>';
     const plantLogs = state.logs.filter((l) => l.plantId === p.id).sort((a, b) => (a.date < b.date ? 1 : -1));
-    const logHtml = plantLogs.length
-      ? plantLogs.slice(0, 8).map((l) => {
-          const m = measureText(l);
-          return '<div class="item"><span>' + escapeHtml(l.date) + ' ・ ' + escapeHtml(l.action) +
-            (m ? '<br><span class="measure">' + escapeHtml(m) + '</span>' : '') +
-            (l.memo ? '<br><small>' + escapeHtml(l.memo) + '</small>' : '') + '</span></div>';
-        }).join("")
-      : '<div class="hint">まだ記録はありません。</div>';
+    const logHtml = ACTIONS.map((a) => {
+      const list = plantLogs.filter((l) => l.action === a);
+      const last = list[0];
+      const m = last ? measureText(last) : "";
+      return '<button data-hist="' + escapeHtml(a) + '" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:none;border-bottom:1px dashed var(--border);padding:10px 0;color:var(--text);text-align:left;cursor:pointer;">' +
+        '<span><b>' + escapeHtml(a) + '</b><br>' +
+        (last
+          ? '<small>最終 ' + escapeHtml(last.date) + (m ? ' ・ ' + escapeHtml(m) : '') + '</small>'
+          : '<small style="color:var(--muted);">記録なし</small>') + '</span>' +
+        '<span class="hint" style="margin:0;">' + (list.length ? list.length + '件 ›' : '›') + '</span></button>';
+    }).join("");
 
     // 写真ギャラリー（記録・日記・植物の写真）
     const photos = [];
@@ -948,6 +959,9 @@ textarea { min-height: 70px; resize: vertical; }
       if (save()) { renderAll(); openDetail(id); toast("水やりを記録しました 💧"); }
     };
     $("addLogBtn").onclick = () => openLog(todayStr(), null, p.id);
+    $("detailBody").querySelectorAll("[data-hist]").forEach((b) => {
+      b.onclick = () => openHistory(p.id, b.dataset.hist);
+    });
     $("addDiaryBtn").onclick = () => openDiary();
     $("photoInput").onchange = async (e) => {
       const f = e.target.files[0];
@@ -968,6 +982,28 @@ textarea { min-height: 70px; resize: vertical; }
         });
       };
     });
+  }
+
+  function openHistory(plantId, action) {
+    const p = state.plants.find((x) => x.id === plantId);
+    if (!p) return;
+    const list = state.logs.filter((l) => l.plantId === plantId && l.action === action)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+    $("historyTitle").textContent = p.name + " ・ " + action + "の履歴";
+    $("historyBody").innerHTML = list.length
+      ? list.map((l) => {
+          const m = measureText(l);
+          return '<div class="item" style="align-items:flex-start;"><span><b>' + escapeHtml(l.date) + '</b>' +
+            (m ? '<br><span class="measure">' + escapeHtml(m) + '</span>' : '') +
+            (l.memo ? '<br><small>' + escapeHtml(l.memo) + '</small>' : '') + '</span>' +
+            (l.photo ? '<img src="' + l.photo + '" alt="" data-hphoto="' + escapeHtml(l.date) + '" style="width:64px;height:64px;object-fit:cover;border-radius:10px;cursor:pointer;flex-shrink:0;">' : '') +
+            '</div>';
+        }).join("")
+      : '<div class="hint">この内容の記録はありません。</div>';
+    $("historyBody").querySelectorAll("img[data-hphoto]").forEach((img) => {
+      img.onclick = () => openPhoto({ src: img.src, cap: img.dataset.hphoto + " ・ " + action });
+    });
+    $("historyOverlay").classList.add("open");
   }
 
   function openPhoto(ph) {
@@ -1240,6 +1276,7 @@ textarea { min-height: 70px; resize: vertical; }
   $("askYes").onclick = () => { const cb = askCb; closeAsk(); if (cb) cb(); };
   $("askOverlay").addEventListener("click", (e) => { if (e.target.id === "askOverlay") closeAsk(); });
 
+  $("historyClose").onclick = () => closeOverlay("historyOverlay");
   $("diaryCancel").onclick = () => closeOverlay("diaryOverlay");
   $("diarySave").onclick = saveDiary;
 
@@ -1256,7 +1293,7 @@ textarea { min-height: 70px; resize: vertical; }
   $("lPhotoClear").onclick = () => { setLogPhoto(null); $("lPhoto").value = ""; };
   $("photoClose").onclick = () => closeOverlay("photoOverlay");
 
-  ["editOverlay", "detailOverlay", "diaryOverlay", "dayOverlay", "logOverlay", "photoOverlay"].forEach((id) => {
+  ["editOverlay", "detailOverlay", "historyOverlay", "diaryOverlay", "dayOverlay", "logOverlay", "photoOverlay"].forEach((id) => {
     $(id).addEventListener("click", (e) => {
       if (e.target.id === id) closeOverlay(id);
     });
