@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>植物管理</title>
+<title>Verdant Log</title>
 <style>
 :root {
   --bg: #eef7ee; --surface: #ffffff; --text: #1f3a26; --muted: #5f7a64;
@@ -33,7 +33,6 @@
 }
 * { box-sizing: border-box; }
 :root { padding-top: env(safe-area-inset-top, 0px); }
-html[data-size="large"] body { font-size: 17px; }
 body {
   margin: 0; min-height: 100vh; color: var(--text);
   font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
@@ -47,36 +46,62 @@ header {
   background: var(--hero); color: #fff; padding: 14px 16px;
   box-shadow: 0 2px 10px rgba(46,139,87,0.25);
 }
+header { display: flex; align-items: center; justify-content: center; min-height: 52px; }
 header h1 { font-size: 18px; margin: 0; letter-spacing: 0.02em; }
+.month-pick { display: none; align-items: center; margin-right: auto; }
+.month-pick .pill {
+  display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; flex-shrink: 0;
+  background: #fff; color: #1f5c3a; border-radius: 12px; padding: 6px 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+.month-pick .pill { font: inherit; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
+.month-pick .caret { font-size: 12px; margin-left: 4px; color: #1f5c3a; }
+.month-pick { gap: 8px; }
+.today-btn { font: inherit; font-size: 14px; font-weight: bold; background: transparent; color: #fff; border: 2px solid #fff; border-radius: 12px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+
+.wheel-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.wheel-box { position: relative; display: flex; height: 200px; }
+.wheel-band { position: absolute; left: 0; right: 0; top: 80px; height: 40px; background: var(--accent-soft); border-radius: 10px; pointer-events: none; z-index: 0; }
+.wheel { position: relative; z-index: 1; flex: 1; height: 200px; overflow-y: auto; scroll-snap-type: y mandatory; text-align: center; padding: 80px 0; }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel .wi { height: 40px; line-height: 40px; scroll-snap-align: center; font-size: 17px; color: var(--muted); }
+.wheel .wi.on { color: var(--accent); font-weight: bold; font-size: 19px; }
+
 main { padding: 16px 16px 110px; max-width: 720px; margin: 0 auto; }
 .view { display: none; }
 .view.active { display: block; }
 .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.day-nav { display: flex; align-items: center; gap: 8px; }
+.day-nav button { padding: 6px 14px; font-size: 18px; line-height: 1; }
+.day-text { flex: 1; text-align: center; font-weight: bold; font-size: 16px; color: var(--text); }
 .count { color: var(--muted); font-size: 13px; }
 .row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 
 .hero {
-  background: var(--hero); color: #fff; border-radius: 18px; padding: 16px 18px;
+  background: var(--hero); color: #fff; border-radius: 18px; padding: 10px 14px; cursor: pointer;
   margin-bottom: 14px; box-shadow: 0 6px 18px rgba(46,139,87,0.22); position: relative; overflow: hidden;
 }
-.hero::after { content: "🌱"; position: absolute; right: 12px; bottom: -6px; font-size: 64px; opacity: 0.25; }
-.hero .big { font-size: 20px; font-weight: bold; }
-.hero .small { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+.hero .item { border-color: rgba(255,255,255,0.35); color: #fff; }
+.hero .item small { color: rgba(255,255,255,0.9); }
+.hero .big { font-size: 16px; font-weight: bold; }
+.hero .small { font-size: 12px; opacity: 0.9; margin-top: 2px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.grid { display: flex; flex-direction: column; gap: 8px; }
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-  padding: 10px; cursor: pointer; text-align: left; color: var(--text);
-  display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 8px 12px; cursor: pointer; text-align: left; color: var(--text); width: 100%;
+  display: flex; flex-direction: row; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .card .thumb {
-  width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden;
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; overflow: hidden;
   background: color-mix(in srgb, var(--c, #d7f0dc) 70%, var(--surface));
-  display: flex; align-items: center; justify-content: center; font-size: 42px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
 }
 .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
-.card .name { font-weight: bold; font-size: 15px; }
-.card .sub { color: var(--muted); font-size: 12px; }
+.card .info { flex: 1; min-width: 0; }
+.card .name { font-weight: bold; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .badge { align-self: center; flex-shrink: 0; }
 .badge {
   display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 999px;
   background: var(--accent-soft); color: var(--accent); align-self: flex-start;
@@ -86,6 +111,7 @@ main { padding: 16px 16px 110px; max-width: 720px; margin: 0 auto; }
   display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px;
   background: var(--c, #d7f0dc); color: #1f3a26;
 }
+.btns > button { pointer-events: auto; }
 button.primary, button.secondary, button.danger {
   border-radius: 12px; padding: 10px 16px; cursor: pointer; border: 1px solid transparent; font-weight: bold;
 }
@@ -127,19 +153,52 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   flex: 1; background: none; border: none; padding: 8px 2px; color: var(--muted);
   display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; cursor: pointer;
 }
+.ic { width: 1.25em; height: 1.25em; display: inline-block; vertical-align: -0.25em; flex-shrink: 0; }
+.tab-ic { width: 26px; height: 26px; display: block; }
 .tabbar button .ico { font-size: 19px; padding: 2px 12px; border-radius: 999px; transition: background .2s; }
 .tabbar button.active { color: var(--accent); font-weight: bold; }
 .tabbar button.active .ico { background: var(--accent-soft); }
 
-/* あゆみ（成長グラフ） */
+/* 成長グラフ */
 .seg { display: flex; gap: 6px; margin-bottom: 10px; }
 .seg button { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; }
 .seg button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: bold; }
+.plant-btn { width: 100%; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: bold; font-size: 15px; cursor: pointer; margin-bottom: 10px; }
+.plant-btn .caret { font-size: 12px; margin-left: 4px; color: var(--muted); }
+.period-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.period-nav button { padding: 6px 14px; font-size: 18px; line-height: 1; }
+#gPeriodLabel { flex: 1; text-align: center; font-size: 13px; color: var(--muted); font-weight: bold; }
 .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; }
 .chart-box svg { width: 100%; height: auto; display: block; }
 .summary { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .stat { flex: 1; min-width: 100px; background: var(--accent-soft); color: var(--accent); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
 .stat b { display: block; font-size: 16px; color: var(--text); }
+
+/* キーボードを閉じる「完了」ボタン（入力中のみ表示） */
+.kb-row { display: none; justify-content: flex-end; margin: -6px 0 4px; }
+body.kb-open .kb-row { display: flex; }
+.kb-done { background: none; border: none; color: var(--accent); font-weight: bold; font-size: 15px; padding: 4px 8px; cursor: pointer; }
+
+/* 記録の選択画面 */
+.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.pick-avatar {
+  width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  border: 3px solid var(--c, #7bc67e); background: color-mix(in srgb, var(--c, #d7f0dc) 60%, var(--surface));
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.pick-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pick-name { flex: 1; font-weight: bold; }
+.radio { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--muted); position: relative; flex-shrink: 0; }
+.pick-row.selected .radio { border-color: var(--accent); }
+.pick-row.selected .radio::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--accent); }
+.action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.action-tile {
+  border: none; border-radius: 16px; padding: 14px 6px; background: var(--c);
+  color: #1f3a26; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-weight: bold; font-size: 13px;
+}
+.action-tile .ei { font-size: 26px; }
+.action-tile.on { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* 写真ギャラリー */
 .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
@@ -175,7 +234,9 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
 textarea { min-height: 70px; resize: vertical; }
 .two { display: flex; gap: 8px; }
 .two > div { flex: 1; }
-.btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+.btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap;
+  position: sticky; bottom: 0; z-index: 3; background: transparent; pointer-events: none;
+  padding: 10px 0 calc(4px + env(safe-area-inset-bottom, 0px)); }
 .section { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
 .section h3 { font-size: 14px; margin: 0 0 8px; color: var(--accent); }
 .item {
@@ -203,24 +264,26 @@ textarea { min-height: 70px; resize: vertical; }
 .toast.show { opacity: 1; }
 </style>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="植物管理">
+<meta name="apple-mobile-web-app-title" content="Verdant Log">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAphElEQVR42u19WXdcSXJeRGberfYF+0qQINlsrr3OjKSZI8vWeCyPJR8/2OfoWf/G/8H+Az72g8eSj3SsZaTRqKc16m52N9nNJkgCBEhiKaD2uvfmEn64VYXCVgAIgECxbxw8dKPRVfdmfhnxxReRmXjnv/4XiC22/YzFQxBbDI7YYnDEdnomMB6D2A4CB8ToiC0OK7HF4IjtNDlHHFdiiz1HbDEhjS32HLG9Cc4RW2yx54gtBkdsMSGN7U1wjhgdscVh5TAjICKKxyEGx27TRme8/FRxTmkZe9MYHNuGiMboXLIwXpgBghgbXc4RGyAAImYS+ZSXdSxHk46dR5ytbLMNy7JTXtYWdiqR3aqvC27F/CMOK4CI2qisl0+5WQDMJosxLDqeI3YdgESUTRYYMiLKJYYQMB6WmHN0CAdgLjGEiErLbCLvOclQBojf97GJwwoYYzwnmUnktVFE1P5nUjE4vu+EFBGVkpnkmOckpQqjX+aSxVfl53Fg+b6HFQQAoFyiuJ25EGUTBcEEEH3PB+f7HlaISDCRTRSiDAURDemkm3UsL85ZYnCQbXlJN2tIRyTDGGMLJ5csavN9px3fa3AgoiaVSxZt4Rhjen9fTI/FVF18nxcHIgJgMTPWOwhRZEl7OUvYnb+JPcf3M6ZwO+3mujGlm9wmnFTCSfW6kxgcb8eUG4AjcUljjGsn9oKAiAS30l5+F2j6wszE4Dhlv05EdKo1ciJyrARDQYfhIwofxfRYt8aGiL1QyCWLR/pGIIbCsRKnmt1gp/PoPIMaw7Z+/KZ/AEhwaywzz5AR6GhaTvjDELWRhfTIzPC80iHr+5kRGnKpYtfNBEoGSvbQjrwl7Ejt6PONSoczw/OF9Ig2kp3GWyAigWbIxjLzglsAdF5zxOCcvpkhC3XTtdJXh35kc1dTiIgn/1hEFNyaG303kyho0n3+ksg4lpNyc9oYQGSI80Mj80MjDJEAjNEpL9vW0dmBD6ZJZxKFudF3BbdO6/k1hTZ3rw79yLXSoW4yPL85Ot+oVvM3XCs1V/gw545LE5yKD814eYtbV8dvG3MgY+iKXa7lERki4oz9wfyNP5i/wRmLAgRDlvHyfYJF1D92dfy2xa2Mlz8VuVaaIOeOzxU+dK1Uzd/4/nIOBPRVTelQMHs6d3skddlEsf+kgZakloXU2Hh+VqoQcd93REM0lB7nTOwNK13LJosHw4tJFY7nZwupManlESlwn6EAAEM0kro8nbstmK106Kva+TaknefWBIY8UA1lAsEcTXoic8MV6eXK1wwYQ0bHH+7oXYii/h09P36n3NiQKtgHH0SCibSXN2R2yh7b/6aNSrk5R3hKy70QIaM9Ozk/fseQEUxE/uX1BhMBDRkDZip7s5CYkiZgwJQJAtVgyE9jtQyg52DAlAl9VYuGQJog541fLnxgcVdR+BojEhVKbMslIkPatRPz47f1fsGFiBzLTboZQ/qgjICIXMtLuum9CW0HfLddO2FIE5FtuYKJ10hYEFBRaHH3cuGDnDcuTRAtG1/VlAnZOU/QeVHh9g81wkp3mDSppF2cLdxLOUUNEo5J8QjIttyUmzGkGTKpwrH87FhhVuqwl1QiQ00qmxzapZrvBQfvepdezshQ6nCsMDuWn5UqZMgM6ZSbsS2XgI6bmWiQKac4W7iXtIuaVHdJNMIKIJ3v7Jy/CCZ1qxuwO8vIu5T/IOdNapLHdaq9G5Pa63vstuck94KgkBo9VOAyZIrpccF3uISoOWh+bIdP6gg2x4uAmmTOm7yU/8Di3k5nSVK3zl8EO0doAhDf4z8R0JA2pCczN6cyN4k0kWZwVP0Adk6SMdpzkrND17XeFiGAyOZ2qqcS2zejybiW11U7GKLWcnbouuckjdG9oOyviOzSD6L3msrcnMzcjN63i4xutOXIz1HkwHOXzxFQGd9XDexhoB3qLnPe5Gz+A4t7mg7fhRbNZcrN2MLtdR6hDMYLc8XMmFKyW5TfVzXfV1+3hZPyslH5PmobK2bGxgtzvU2mRGSLdjg71BshoCZpcW82/0HOmzQ7vSMBITJfNZTxz33vzPmDg0i3ZHU/VoiaZMouzuTvOSLVG4/7FdL2EkMERJwfvxvJ5BGGCunRI+5MQcSMN9Rbc5kfv9vWu/YjwkdAhnJEaiZ/L2UXNcl9X7wlq3QBNlYJOOeSNAIwX1X21Qm6FGSu8IOXtYfl1opgdh9NChDNntiPgFqrjJe/NHrju5df2MJFZJnE0NEzoHQizxhHZKH2r43fzXj5UO3uTScgQxQ9Q59XVSbMeZPj6RuIeHBGRr6qALLznprz7yElhtxXdW3CvdUybBfnNACbSL/rifRa/TEAIPK9YOpwAr7394AodTg1dHWztrrZWHUsrxspDnUb2qi0l0t7uUqzNJQemxq6KnW47//IkB+83QWJNAGMp9/Je9MEdJBjYMC0CX1VZx3C8f0NK20GaqQyYe/ARv+k2pwAAciALiYvTWRuCW73cbmF1HDPagZDpInaPBVgfuIuQ+Y5KffILaJEZHE76WYYsvnxu50PblfIDvrqvaFTcHsic6uYvGRAQ6cQjfs0E6EyoTEXYqf/hQCHJtmS1V5OqowxRLlkgnZQ1zDjjs7kIpVs/+HrFUM5omdZKceJqIbWKuPmx3Kz+eQwx2NshUXAlJsbz19Ku3mtFQAigDLGl/Kgr94ZGaXF3ZncBxl3VJmwh3uCMkaqHSkPImvJ6lEI+PcCHJG1VLl3sXq2/ZMb13/+/nsJ29adnKLD892Z3AfZzkDj/gk6Sq3GM9k/ff+Hvzd3lToxQprw0siNYnpcG3XEwUdEZeRQevzy2C2lQ0Q0RK5l/fT6zX999Ybg3BDt+xDYAXS2A+julCOiVGosl/3ZvTvFdLLPUJy3zoFwvj+AxBjzVd305CMEMJrNurb93qVZY0zX90YqSOSih5KXCDQgMcToo1inW4eAGOOlZkMZPZJKJyzbdIKL4E6kmh99aUZJUESJEFEZXUgkb4xOFBLJUCmG2C6sIPY+CSAR6KFOKOz9RiJijN2cmrwyOvL+3JzqvCACGlK+qjPGAOncp+ZCeA4EJnVT6mb0PIyxhu9/uvBEaX1lbHR+bCyUshcfRNqQHk2/M5a+EemYCGiMcSw37RW0UQDIERthsFavJW23mEyqbTXzdc52IqIuBSaAkXTWEC2VN2VH/9BGpb2CY7nGmKiQBgBj6Ruj6XcM6V6ShIihUjenJmeKxWqz9fXy8rYqs3Mc4rDS9QeqpeoR7SAix7IWXq0uvFoVjN2dnbGtXRQBEVCZIOuOz+Y+trijKUIP28YQojJmrV4TnI+ks6fVwUdEFmOjqYw2Zr1e7XU/3QfQJC3uzOY+zrrjygS79uwrrXPJxN3ZWQJ4+OLl842SLUSkviOy1k4Peu7gwAvy48sdtIMx9vniYjMI86nkvUuzgdxdN48EJVskZ3IfZJwxbRQB9aa4CLBWqyitR1MZq9PCc0IzRAnbGUomG6FfajYE4z0fSwSkjco4YzO5D2yR3CvcIaIx5t7sbMKxt+qNz58tOjtx78vyxZkRdlEeBFBpn8h0R1NwXm40v1hcBIB3JyemisVQqb34MKQ4syYyt7PumMUtztpjTUSC8VKz0Qj9oWQyYTvmxOCICEcxkUza7kaj0QwD1qOgc2ZZ3Mq6YxOZ25xZZj9khFLOj41dGRtVxnyxuLQnXBqlfQS8IJNyIXbZtwsKpqGML5gTJbREZAvx9fLKZKFwaWTozsz0q3J57+qPxpSARlM3hG048m7/DkNshsFGozGbLxYTyarfcsRJD3OKCIfgfLVelca4YttzcOSzxfdUyAwpANobGojItqy7szOCsW9fvHz86lVvuGyXmUwD2es0Or3NqWxbGdR1RL5dgUM0RPeXnvuhnCoWbk5N7nUePZoZWczrHVZElMas1qunRTu6hENpvVar4B6IW8zrxDXc63UCKe9dms2nks0g/HxxkfVEOgJC5L6u6/Nu8LmI4GjXFGSld1gj57FcKj1YeQEAd2dnc8mE0vpgQqD3ouYUaYchSlgHEY79H6A3Q5kqFt+dnACALxYXy42m4LuUfvRlBeACbe2/KJwDOv3Gu6TxKHP5/NniVr2RcOx7sztkj11mW2LXQheMlxqNRugXk0mvo3achHAMpVIR4Wj0EI6DHmAHv0a8MzPt2tZyafPr5ZUoQ9klsXc7ii/IpFwcz0GILNT79DFEPO6LxSVlzF7ZYwfSGe7V+JoyWG/U0443ms4oo0+4MVowJjhfrVfUfhjd+wC9wsZUseCH8v7Sc0O0l1kr44e6gcgujvNgcHHSFWSawkDXdxVdIx73+NWrg2WPfstdarNerxGRfwCkjuU8mmEYKrVWqx39g7rCBgA8WHmxXCrtchsAhMgDXdcUIl6gGTkdnQOBITA8jfAitb+/Wz5M9uhjG/VaLWhtNBocX592EJFAttlslpr1rVaT7yEcB+Gpv7DRtc6Ln3Ai2nNxIXSOqCNFU2hIEVD0G3aCTP2gxp9DZQ9EFGL3hBGRYKzst1bK5VBJztgJPYcy+tu1V4GSbF/0CL7rkfoIG7vJuKqcZBaiMScgQ0pT2J2a8+QcBkzBuzSafCdpFwU6UW+fJhkdSYA7GOdRaAcPdF2bcG9xoSt7LJc2Xdu6MzPNEHdwOsR9Q36kdnz1apmdkki6UFpTB5Bixnbs0+8VNhZere4SNnpLS9rsE08PKTm0N24AkYnGHAAFOkm7OJp8p+BdMnDSUyHEiVN/Uw83prPvZ91JbaQyQaBrLVkJdE3qVrS3AAAZsh4gUp8iS8TLPCtPpGCv9kx0f+n5WC4byR73l547h/GPqMhSC3x2Sl13zTA8ykchoh+GP7x2dV9hY9eSCNsdxewwQLSXpKGoYwgYClskHZ72rKzD04I5nFkA8LzyL0QG9/TFHQ8cJxwxjsJXWxuN74aS1xDRFklHpDPOhCEldSvQNV9VpPFDVdckCahT0D4IKGhI+6rmWYX9S+cd2ePOzPTd2dmlUqnW8gVjdBhdQGQcjTqN0yOPiIy9wsbBOEZf1Qg028dzdOV5Q6CjAeRouVbWYq4rsg5PW9xjKACAwBBpANxoPPLVFmf2CRMfceKxIs6sSrCSsIcSVt6QItAEgLANFCKjyA9Vw1cVX1dD3dCmvfMYkWPXPbbb7zBQ1YPeqit7TBcKxXTq3uzs3z14iJwbYxzH6hM4DBlEBGPOtGuXMWbbwvfDqD4bCRvP1jb2Chu7XitQ2wXe7mgQEJGKfseZZfOMyzOuyNoiKdCNFhiBicIKtoErmnKzEqxwZp08JRanMyoIpeZjN/MeAnZPoyEyBnT0tgIdy04k7eEuUKRptVQ5VA1FflQNwahBF0VgGtpI1qOj7yt7/OTdd66Mja5sbj1+9coSov9C1sZ4li0PVldPswMBMVDqzsx0r7AhdjKknYRDBqaBKKK6riEFAIhMoGtbSU/kLObtAARpakcW6IhmbenMkCo1H59Wvex0bk1AEIGubbaeDSWuEW23Cvfu1SGS1AMUAMjBtDYy1A1fV31VDVVdUWBIS22k8R2e2hf7XdljspC/PjF+d3ZmqVTSfbcnIYAhsjl/M0cD7hU2XNs+2G2gNL7ULQLDkAt0bCvliozLMzZPcmZ1Num1AYGdWLOnsEeIdqn5KNA1hvapKGmntTWBGFpVfyVpFT0rb/ZwyTYthajhogsUQOSelfOsPABpI0NdVyZoyJIhBYhwwKFYXdljuliMZI9ff/sonXT7cVKtlTE254E626NnOUdtzL1LswnHLtXqfYSN9qpBNKRS9nDSKgrm2DzVAQQZMoZUZwgwkizpwPEXLVmq+isMLTwljfXUSvZRQCm1FibEPdzvHaKNAp1zc7rzQ933R+SelQfAtDMebSXt49W6sscPrs6/OznxfL3UMAFD1EQHEFKURnPGCdTZQSPqJ50fG5sf3RY2+uq5SKQ9kU20CfheQGwDOYL4vlJN1NdSai1E2/tOS4A/xdpKpFJUt/xFxN1syBBxhgnbjpRN3LWw21oIGVKGpCF5aEPDTtnDvj07LfpKlgigtE45zpkGFGPIta17hwkbe5YNRW8dNYL0DMg2LIgoVCrjefvt7yVEa8tfDHT1OErJGwVHO7hU/OWWLDHcPk4JEbXWt6an/+Sj9y+PjgRSaqIDEsJjiGZd2aMVhjNDxdnhYnhwyEBEqTVDFOysao2IKLWaLOQL6VQ97CNswLFePMqKEfHjK5f/+MP3h7OZnQSrHVAq/jJD63SLduz0y2cIpdZCL+0gIsE5Q3Qt+6d3bv3+uzdcy/KlPKEq1ZU9Hq6sIKDfl0wgoiZSxjhCmDO7DgERfaUYsi+e7duxcexPAwBfyol87t+/f+/DK5el1q5l0Y59cu2Aggin3l/I5/7DvVMeIGDKNAkgaQ0T6M5mVVzaKL0qV3LJ5Pzo6Fg+V240txoNztgJ6SHnfK1SHS/knpc3+896dGSgY1mNMNgVuQlAMHZzbAIAHqy+0Pup47Snzr7vdyACGPjnhacnRAZDVFoT0c2pyd9/90Y64T1YfvE3Xz9Yr9Z6JBNiaG/6T5py7dTdBgDwuT++dwbFdx6oiisyNk8SmAgfgvNKs/l4dU1wfml4+MroiOB8ZXMrYqknGcRQKam144iWlLzv/FmcjWdy6/Xqa4DDs2x12HkeRORZ9sr6ZrXlvzY4sCO9ZxOJ3795497sbKDU3z989C9PnxKBxXkPMkRLbZZa3zEmzqJkf2a3QyKWWk8mUnd7g4sthCH61bePXm5tfTR/5aMrlwup5KePn2zU644QeIBMdOh8WJwvrW/MT4wJzsnQQS/EERthSESuZUl9vK4fhkhw2GnTRJzzMFBrlarN+esV+RiiMkYpNT82+tH8lWIqtbC6+unjJ5v1umNZQL07sqKA8qQTTE7fzuoIBgQudbXsLxa8q6YjixERAthCPH61WqrVf3T96uWRkZFs9rOnzx4srwCAxfnrEAJEY8x6uTI9OvSismVxTgf8mdI61DrpOKVG4+hVpUhWIWqfYnlgqgKQs92lVxuISK/rBX0pU6774fVr70xOKK0/XXjy2ydPAWBP1kMM7c3Wd1JXT0vyOutsZY8sFq601I7MBTr7pGu+/5dffPnLb74BgB/fuP6TG+949uuyVCLB+Wa94bfCbCKhjMED5hgB6qGfst12qeU4RRPd916EyCHVG/7rvUIP98z/7N6dW9NTq5XKn3/2xSePFzhjYrcfigJKqRqunAXVOO3aykHug2Cz9WS8J7h0ZY/ohb9cWn65Wf7xjevvTk2O5bL/9N3jhdU117KOG2Iisvl0bf3m7FQjCA4KAJyxeuDnvSRDdqyZY4ChMf2zIdT4aqvMDysRHyTgAsDH81fuzEwLzj9fXPrk8YKKchPau7kXDanN1pO2JnJm4DjTBmNC5KGulv3FvQCPXti1rHKz+Ref3/904UnKdf/N7Vs/vDrfzeyP9yaM+VJulGsT2fxBjcScsUYYJiwr2XOyw1EYYkQ4Dvqv2pismyjX6seNiV2HkUsk/vDOrY+uXK4HwV/d//JX3z4CgAMKucTQKvuL4WlLXvtxjrMtRRFHqxauJKyCK/apuVDHhfzTd4/Xq9UfXp3/+MrlyUL+N48Xlje3jsVSo2r+UqmUTyUTjhOEEvdrDDPG1MMg43r1IGBHSCiij42uhtkXcNqYhG2Hvqw0W+I4PJQhRlXiOzPT781dSjnOk7W1X3/73VajERXqDkCG8FWpFp5OUf4cPcf24tr0Fw6oxrVdSMK2n66t/+/ffvbl8+WRbOZnd+/cnp7SxqjjpBVRx+h3L1+NJDNmvwO1ogmuBX7acc0RdItIhLWFRQe33CFjCe4slzbZcUIhIvpSerb1kxvv/PjGdQD45Tff/OUXX9Z83+tbwjWkNv2FN7OJlb0RbIhQ18vBUh/2FB2X40v5dw8e/s1XD5UxP7nxzh/euZVLJMJ9yjH9gkszCMrVxlg2F+4HLM5YxW9mHNc6wiqP8hSOGCq9l2a2tzklU5V6M1CKHU2tiXKZUKkroyM//+D9d6cmX2xu/Z/ffvbl0nLEPQ+OTcTQKgdLoa7j2ZLFbUL6BkBIDK1asJIQBVfkDnIhhogjcsv67uXLUq320fzlyyMjo9nsrx89fvTypeBcMGaOMJ2WEI9XVz9MzSVtO1By11FdnLFGEHLGU45T8/3++lskohgis18xyBjjCCv01YutrSMKGxGdEpz/7vVrt6anomT1i8Wlg7nnroCyWQu6GcqZTxx7c1uWELb8BdO3EE+dXp5ys/lX97/65cNvBGP/6taNY5VjIpqy8GpttjCkzD7BxRBVg1Y+kdSHJbQEwBnbl7pGDUQFL7lc2jyKsNHlnuO53M/fv3dvdmajVvvzz774zeOFbu7W/wMM6S3/TGoo534EAyHw0NQqwWLenTcU9oNIN9F9vrxZb/zg6pVb01NDmfQ/fvvdi60tS4j+0T1yHhu1WrnanMznV7Y27Z6TF6Jtq5VWs5hM958ORCRjEpZTD33cgwyldSGVrjf8RhD07Q/dkazenp76wfwVIfhXz5f/+cnTuu+7lmXo0JOoiKG95T8OTe3sJK9zIqS9wUWu+Gpzlyx2EEt1LetlufyLf/n888WloXT6j967+/H8lagidciKj7o9Vlaylpewd9+bIRjbajXzXsLtO6ntQp0Qe7V2Q2Rblg382fpGf+6CnabXKFn9yY13lDF/89XDv33w0JcyQsYRxk34arMmz1byOl9wRGMFW8EhwWXXHAPAr7599Ff3v6wHwUdXLv+7e3dyiUR0Bmh/VUoq9WxtY354VO6UPRhjjTDUxmQ87yA5NYoajhDKmF11OATQZCay+eWNTdNXGYs60wIpr46P//yD9y6PjDxZW/vFbz/77uVLx7I44tF0ETSkt4KF7gC+MeNX/vi9N7w7VxsfADxrqFvQPxRQgvP1au3Z+rotxOXRkUsjw0S0Vqkaoj6bVgTnG7XaeCabcJ1ys9Etk0ZdOXkv6QixWq/aXESf01uVZYiGKOW4moy/43AmUFoXkikd6mfr630avaJCScJxfufa1Q/n54DgHx9998njBV9KSxz9TidiaFeCZy21zlDgm71hg70hh7F9YrxB5JXwWVOu4WHBZVflohXKXz785u8ffrurHHPQ2iUim/PPni1OZvKuZXeDCxFxZKVmPe8lDjy3DxEAbC4CtePzCYALnhD2oxcvD5rjiJ/2FkrWKtW/+Pz+l8+X9yuU9JeYRVOuVcJniBwirQXx7Mqwe1LZM5RIsZ1/gO5c+cwZCoGOQIeOuZOzS+nvLz1/sbkVlWNGc9lPHy88WVuPOs32DjpjrBWGT16tvTM6/tnz7UZwwfhms3F7bCph28poPIBwCIaBUgx3HCE6WyiulaqBUvu2lUfcU3B+5ELJYQABk7RGFQWaAkOa2rtasGcr/QUuvGFPLKR2NmqgfY83ZygESwh0bZ4W6FosgcgY2of2l/dhqVE55u7szJ2Z6T+8c/ur58ufPF4IldqbNUTi94OVlfF8bjKff1HeijIXxrAZhr6ShUTyZbXMd2ohEeHwLEsZ0sZEoIwCStZLGElLpdJeZEQptC/lUCr14xvXJwuFUr3exa4tXuN6QCTSCTGctMYMhURGmqYiP9Q1Rb4yTUOqe2YhIuturW6/+inUVk4KDENtNGBUSUG0LJ4UzLNZiqGwWJKhiHb0dv6S+qeyh2vknBui3zxeWC5t/s71q/dmZ4Yz6U++W1jZ2qcc097k8mzxd29cW61We89o22o1i8nU8/KWELv74Y3RGdfTxvSudUScSGf/+fFTsadzuFsouT0z9f7cXMp1HiyvfLqwUPcD57UcRq/niFYRonBEzgUEa5xIG1LSNAyp0NSVaUnTIFKd230I2zcenuicoJN4DjKkOVqCOYJ5HG2bpQXzOHMYWtsbPilCj9zhaOCkrcUI4FrWi62t//v5/Q8vz70zOfFH7929v/Q8ao3ZFdctzjfq9ZWNreujY1+9WHYtO6Id643quyMTgrUlrF2HdDncWverkSgenQV4eXhkrVxtBMEut4GIrTDMJ5M/un51bni4HgR///DbqH3paMnq0bwzEJGi7e8UjsgjYAJGos0N2gTKtEJT0xQq09Im0CQZstce7dcDBxJojxeS9oRAD5HxtjKDHSgo2q0NMqBTbvrulmP+9sHD56VSb9/hZr1uR0113eAixOeLiz+9e3sknSk16hbjgvPNRjNh2ynbrYcBcuEIq9c5cYa+bBMOrXU+mbSIffvipdMTIKLKnNzT1ddtfDztTneEbZaxY5wRuMWSNk8nYBgANYVERlGrEb5o6U2E1ynu8yv/8f3XE8MV+QjoijxHW1MIQD0cs/cgIlDGhFpHvrdrpyOrATBEwflapbpS2kx57uWRkbmR4WYo1yoVROy23kRnkkqp7szMLJc3oxsOfBlO5wqBUpvNui1EwrI3m43l8pYyOum4NhdbrYbgHAGVMfNDow+WVlphyHpS4lApxtiPrl390bWrgrHPni3+wzePfCltccqFsd5xM4Y6a27XgYxEoAmMAc3RJjAN+bKlS4iveSAXn/+T9187Dw512dcliyUslqIDDmfVxswMFUcymWjPVqhUFMgRTxMpthAtKRdW15pBMFMsXhkbSbnuerXaDMNuS6ngfL1WG06nhzOZF5Wyzbk0Ouclsq63VNnkjD/eWH26uYEMtTGFRDI0shmGnLFAyelCodEInqytRw4peuRAqYl8/g9uvXttbGytWv3rrx588+KFxTk/jSOEsAcQRKS0jrb7CsY8x2YMtT5If0OOVqC3Sv6DQG92Lxd7nX0r83/y/gngLAzIplojUg7PIUS5OO7Sqn969/ad2Zn5sdHpYnE8n0t7HgAqY5QxEVaisWCM7QsVBGKHH2NKAhlDeLlVXqtUConE1bGRmaFC0/dXKxXBGENAIMHYy62tD+YuSa0avh+dmjU/NPKstM4QLcas6OQoopFUutJqGDJAlHad0UT6syfPLM4iGUppBUQfX7n8k3euZT3vwfLKPzz8ZrNe9ywBQEeUqmi/U467I6CNkVprYwyRJfhwJjOez9+cmnzv0qUfXr0SSLW8uWXtblaiKHxUw6flcIFAM7ROBNB/+9/+7DTCv7JYquBes1iqu+GzWyIfzWZTrjOezw+n0wnHdm1LKu1LuVGrV5vN1Up1o1ZrhkEgVcQ0Oeesu2QAfOQGAY9wHnhUsQyVsoS4Oztzd3ZGcP7V8+XPny0GUkb33UitLw0Pcc7qOhCcMcSE7dSD3UcYDifTa/UaQwy1ms0PrZUqTzc2XCEIiAiK6dQP5q/MDBXXq7XfLDx5srrGGROcRQ7/KOIPAjikORC1j9wgIoqgEDnCjOdlPG8oncqlkkOpVDrhWZxLravN1laj+XJr68ul5z0qHAEgQyFNfdN/JE09OuvnpN7rZ6cBjoiiIrC0PZMUEwDQlcYJQKq2buNYImE7Q+n0aDaTSSSG0inXsizB/VA2g3C9Vnu5tVVr+ZuNRqhUEIbEBXJ+LaikjTRHDj4M0AD5YXhtfHxuZJgztl6tfvV8uXOfEkitiSibTliWICJjzN4+nai5BAC0No1m0O3n0MakPe/u7IwtRKjU/cWlUr3uWnY718GjhgxD8MjJ1lAIFRoAi/MIECPZzFA6lUskC+lkdIx/S8pas7VaqaxWqnXf32w0glAiQs+mqchhQEO9qIVLBOb16Od+4Pjvf3ZanAmANMmEGMnalzk6pnOjbjdSGGMMkTaGDh+O5qt6c2v52e8+//xaUGVaHS8fQ0BAqZUxRECCcc4ZUK8yDkdZ5dvp1k4dUmodXQ8lXothEABjbN3y/rp4ZW18fiqdTB+2VHwpo6OkOGMRlHv2vVmagkr4pKnWOFqnqJmeIqkmAOBot9R6qKtZ+3JCjGiSvfIBIgrECPJEJJVaq1Relcu7HWkyOZxOXZ+cnPvuH7zKq5XNllavc6jG9nXiHWlkb/Xk6NLKMT75CCOFjA3lk/+ZmSc//HGYzgetZv8g61rbaXZvKOFoN9VaJXyiKegICqeWPJ96KyIxtAzIrfDb0NTS1gyi6D00knoGGhG7Z3kR0VajsVGrPVlbYwhgux/z8MbKk+VSQ/uS8dc5rIb2qEinuQ5O8MmIQEqvrlUmAPzf/L//lZv3q1uBNlJrBOCMMUS7Z2R2CXTdmhyRLocLDfUCAM6i1eMstkO2OXNDLoe6nLEvOzy3i6XuKpd085rIqTCgqjat2iZTmpRpHz17IW49Oz3dgiEYQoJgq7RiClk0DFnbPUS3DfY5KQqQoRXocjV80uGeZ1J+O6OSfXR+qqWouRl8VZfLCOxQlkQdnxl18jEhAN82TOyDEiFsIdo3nh5egyEEjsDqcnkz+EpRs5Osnklh9kx7SDtpt3wS6M2sPS9YostSjxvm31o7Rk2OGFrKNCvh48CUz85h9HKOs16byNAOTHUz+DplzXpimEi/mc76twlBEZtvqrW6XFQU9LQZn+EwijcyRcRRGJCV8JE0lbQ9hyCIVIyPozpgFAS6Gj5uqlVExo/cQXfRspU+IQYRRUutSlNPW3N9WOr3yiEcnvOiFehyTT5VptHp2n9DAVe8+UWgqLkVfp0QE2lrFggOajOOBgYYo2hnwNvEQLDdM8c5O3iqCYEDQlU+baoXAIBvymG8GULaj6U21bKielrMCUwS7AgxBOiSfmRnN5zkcD54uVYG3RaacMBZKiF2HUY6mxQJ9xN3SMB+92yAUNSoyaehLuPZc89z5Bz7eFNES5rKVvhl2ppz2SiA6R4tRwAcqMGtXySn/1SFMxy10lHvmxTWIIchspSMqomcc5Fwf5Ge/cbNJ4wyPb2fCAyA+2a1Jp92Kqt0LrcCivNcRSAAqCofh6ySFLMcna4LMYCuUfe94gsr8XuttayRGpAbPb6+zI9eFLlgkUQz9mR4WjOOQETwiTf8jZNLGL0TGUJT0FCLvllH4NEQndczi/NdSQCIIHyzJmU9La7YLEfQZqkEaJMuCe9/pC8BACFzw9Z/+tWvndAnZIMHDjKB7f7Pud/zbQ/JAAAHSlDXZ0RDYYWmXFMLmpoIZ6huXRyd4yirytYUVuQDj48nxRQCj1gqAVqk7aggA9whwy0hSAwoOJQlEmQ4KSQdUasuMqJXrqunLf2SABHehIxxBM5xISI4RV2OLb0iqZwW13pYatTkhwbIkGLRXoFBTF2ImDGGlAGPbVcSDAAhWIoaNfVImQZixAIvxAuKi7W80FLUKssvk3za5SMERlLNUKBMVUFA1KjbbCgEiQNGSglAEGzZbI0eokwKcATLMHQEJhCwpVca+jmBwTe7iX7AwNFJdE1dP/PNmiFNIKMQw4hajrOW8UYrzZDjYOW0hMg1rWW8hsO8oCwRwawicASLIVfUPEphMgbHNktV1ML25gYLABAICdgg6xyMCAkQBG7vJJCKwk5KcuFeTeCFXWw776FFoLdAZsfdL7KnA/FieQ4csKEddGgM0FsIGDB0vBW+Y0BehEFssQ0a5xjkFfeWRJXYc8T21hDSQfccg+U6BsxzaBxgeAzcww8Y51gcSd9aKg0oOBZH0jHniBff2+I5BkvnGGjWgYOWr8QKaZzLvi2cI8ZGzDlii8ERWwyO2AbUxKCkVwiAg1+Uxd77I2LPccqPS4SD2Qs2iG1sA6NzECLXsJ5JNF3BzYANMydqumI9k+AaBmhfhcABG2JLCiYCRQMVY5BICt50LR7dOxMT0jisDHpYibOV2Ppwjlg+j5//LeAcb418HoeV2N6CsBLHlfj5Y88R2/E5x0A5DgaDul2WETEYsB5pNljjKwVruNbgCQZEDdeSgg3Wkw8YOJqu2MgkuKYBUkij8xc2MommK2JwnGVgoQEOKwOn7Q6YzhGF7YFDB3UI02DlWmLAnhcBiRgRIxqUw32o7TZo4FQwMWhoRil4yxahLQYGHIgGQAo+cBqpGCBcEKIt9T/env7k5tRgRRYE0AxtqQer00AMnOKoBJcDSEhxAA9uF4M3ykTxNS0xIY3tvNPveAhie3s4R2yx54jtQhDS2HfEFhPS2GLOEVvMOWKLwRFbDI7YLiTniElHbHEqG1scVmKLwRHbm+Ac8RjEdiDniNERWxxWYovDSmyx54jtTXCOmHTEFhPS2GLOEdup2f8H6INy5eP/LBkAAAAASUVORK5CYII=">
 </head>
 <body>
-<header><h1 id="pageTitle">🌿 カレンダー</h1></header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-calendar" viewBox="0 0 48 48"><rect x="7" y="10" width="34" height="31" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 19h34" stroke="currentColor" stroke-width="3"/><path d="M16 6v8M32 6v8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="17" cy="28" r="2.6" fill="currentColor"/><circle cx="24" cy="28" r="2.6" fill="currentColor"/><circle cx="31" cy="28" r="2.6" fill="currentColor"/></symbol><symbol id="i-plant" viewBox="0 0 48 48"><path d="M24 26C15 24 11 16 15 8C22 12 25 18 24 26Z" fill="currentColor"/><path d="M24 26C33 24 37 16 33 8C26 12 23 18 24 26Z" fill="currentColor" opacity=".55"/><path d="M13 28h22l-3 15H16z" fill="currentColor"/></symbol><symbol id="i-chart" viewBox="0 0 48 48"><path d="M8 8v32h34" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M14 32l8-10 7 4 9-13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="32" r="2.8" fill="currentColor"/><circle cx="22" cy="22" r="2.8" fill="currentColor"/><circle cx="29" cy="26" r="2.8" fill="currentColor"/><circle cx="38" cy="13" r="2.8" fill="currentColor"/></symbol><symbol id="i-gear" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="7" stroke-dasharray="4.2 4.4"/><circle cx="24" cy="24" r="11" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="4" fill="currentColor"/></symbol><symbol id="i-cactus" viewBox="0 0 48 48"><rect x="18" y="10" width="12" height="32" rx="6" fill="currentColor"/><rect x="9" y="22" width="9" height="6" rx="3" fill="currentColor"/><rect x="9" y="14" width="6" height="14" rx="3" fill="currentColor"/><rect x="30" y="18" width="9" height="6" rx="3" fill="currentColor"/><rect x="33" y="10" width="6" height="14" rx="3" fill="currentColor"/></symbol><symbol id="i-caudex" viewBox="0 0 48 48"><ellipse cx="24" cy="31" rx="14" ry="10" fill="currentColor"/><path d="M24 22V14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><ellipse cx="16" cy="12" rx="3.5" ry="6" transform="rotate(-25 16 12)" fill="currentColor" opacity=".6"/><ellipse cx="32" cy="12" rx="3.5" ry="6" transform="rotate(25 32 12)" fill="currentColor" opacity=".6"/></symbol><symbol id="i-succulent" viewBox="0 0 48 48"><g fill="currentColor"><ellipse cx="24" cy="18" rx="4.5" ry="12" transform="rotate(0 24 34)"/><ellipse cx="24" cy="18" rx="4.5" ry="12" transform="rotate(-45 24 34)"/><ellipse cx="24" cy="18" rx="4.5" ry="12" transform="rotate(45 24 34)"/><ellipse cx="24" cy="18" rx="4.5" ry="12" transform="rotate(-90 24 34)" opacity=".7"/><ellipse cx="24" cy="18" rx="4.5" ry="12" transform="rotate(90 24 34)" opacity=".7"/></g><rect x="14" y="34" width="20" height="10" rx="3" fill="currentColor" opacity=".6"/></symbol><symbol id="i-foliage" viewBox="0 0 48 48"><path d="M24 28C12 26 8 16 12 6C22 10 25 18 24 28Z" fill="currentColor" opacity=".7"/><path d="M24 28C36 26 40 16 36 6C26 10 23 18 24 28Z" fill="currentColor" opacity=".7"/><path d="M24 30C20 22 20 14 24 6C28 14 28 22 24 30Z" fill="currentColor"/><rect x="13" y="32" width="22" height="12" rx="3" fill="currentColor"/></symbol><symbol id="i-palm" viewBox="0 0 48 48"><path d="M23 46Q21 32 25 20" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M25 20C18 10 9 12 5 19C13 15 19 17 25 20Z" fill="currentColor"/><path d="M25 20C32 10 41 12 45 19C37 15 31 17 25 20Z" fill="currentColor"/><path d="M25 20C22 8 26 4 30 4C28 10 28 15 25 20Z" fill="currentColor" opacity=".7"/><path d="M25 20C19 4 14 4 12 8C17 10 21 14 25 20Z" fill="currentColor" opacity=".7"/></symbol><symbol id="i-fern" viewBox="0 0 48 48"><path d="M24 46V6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="12" rx="8" ry="3" transform="rotate(-28 17 12)" fill="currentColor"/><ellipse cx="31" cy="12" rx="8" ry="3" transform="rotate(28 31 12)" fill="currentColor"/><ellipse cx="17" cy="20" rx="8" ry="3" transform="rotate(-28 17 20)" fill="currentColor"/><ellipse cx="31" cy="20" rx="8" ry="3" transform="rotate(28 31 20)" fill="currentColor"/><ellipse cx="17" cy="28" rx="8" ry="3" transform="rotate(-28 17 28)" fill="currentColor"/><ellipse cx="31" cy="28" rx="8" ry="3" transform="rotate(28 31 28)" fill="currentColor"/><ellipse cx="17" cy="36" rx="8" ry="3" transform="rotate(-28 17 36)" fill="currentColor"/><ellipse cx="31" cy="36" rx="8" ry="3" transform="rotate(28 31 36)" fill="currentColor"/></symbol><symbol id="i-evergreen" viewBox="0 0 48 48"><rect x="22" y="32" width="4" height="12" fill="currentColor"/><circle cx="24" cy="18" r="12" fill="currentColor"/><circle cx="15" cy="25" r="7" fill="currentColor"/><circle cx="33" cy="25" r="7" fill="currentColor"/></symbol><symbol id="i-orchid" viewBox="0 0 48 48"><circle cx="24.0" cy="10.0" r="5.5" fill="currentColor" opacity=".85"/><circle cx="31.6" cy="15.5" r="5.5" fill="currentColor" opacity=".85"/><circle cx="28.7" cy="24.5" r="5.5" fill="currentColor" opacity=".85"/><circle cx="19.3" cy="24.5" r="5.5" fill="currentColor" opacity=".85"/><circle cx="16.4" cy="15.5" r="5.5" fill="currentColor" opacity=".85"/><circle cx="24" cy="18" r="3" fill="#fff" opacity=".9"/><path d="M24 26V44" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="18" cy="38" rx="6" ry="3" transform="rotate(-30 18 38)" fill="currentColor" opacity=".7"/></symbol><symbol id="i-herb" viewBox="0 0 48 48"><path d="M24 46V10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="36" rx="6" ry="3" transform="rotate(-35 17 36)" fill="currentColor"/><ellipse cx="31" cy="28" rx="6" ry="3" transform="rotate(35 31 28)" fill="currentColor"/><ellipse cx="17" cy="20" rx="6" ry="3" transform="rotate(-35 17 20)" fill="currentColor"/><ellipse cx="31" cy="12" rx="6" ry="3" transform="rotate(35 31 12)" fill="currentColor"/></symbol><symbol id="i-vegetable" viewBox="0 0 48 48"><path d="M19 16h10l-4 28z" fill="currentColor"/><path d="M24 16C20 10 18 8 15 6C21 5 24 10 24 16Z" fill="currentColor" opacity=".7"/><path d="M24 16C28 10 30 8 33 6C27 5 24 10 24 16Z" fill="currentColor" opacity=".7"/></symbol><symbol id="i-fruit" viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="15" ry="12" fill="currentColor"/><path d="M24 16C25 10 30 7 37 8C35 13 30 16 24 16Z" fill="currentColor" opacity=".6"/><ellipse cx="18" cy="23" rx="3" ry="2" fill="#fff" opacity=".5"/></symbol><symbol id="i-flower" viewBox="0 0 48 48"><circle cx="24.0" cy="11.0" r="5.5" fill="currentColor" opacity=".85"/><circle cx="30.7" cy="15.8" r="5.5" fill="currentColor" opacity=".85"/><circle cx="28.1" cy="23.7" r="5.5" fill="currentColor" opacity=".85"/><circle cx="19.9" cy="23.7" r="5.5" fill="currentColor" opacity=".85"/><circle cx="17.3" cy="15.8" r="5.5" fill="currentColor" opacity=".85"/><circle cx="24" cy="18" r="3.5" fill="#fff" opacity=".9"/><path d="M24 26V44" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="18" cy="37" rx="6" ry="3" transform="rotate(-30 18 37)" fill="currentColor" opacity=".7"/></symbol><symbol id="i-bulb" viewBox="0 0 48 48"><path d="M14 12H34L31 27C30 33 18 33 17 27Z" fill="currentColor"/><path d="M24 34V46" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M24 44C16 40 13 34 15 30C20 34 23 38 24 42Z" fill="currentColor" opacity=".7"/><path d="M24 44C32 40 35 34 33 30C28 34 25 38 24 42Z" fill="currentColor" opacity=".7"/></symbol><symbol id="i-sprout" viewBox="0 0 48 48"><path d="M24 46V24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M24 26C15 26 11 20 11 13C20 13 24 18 24 26Z" fill="currentColor"/><path d="M24 22C24 13 30 9 37 9C37 17 31 22 24 22Z" fill="currentColor" opacity=".7"/></symbol><symbol id="i-drop" viewBox="0 0 48 48"><path d="M24 6C30 15 36 22 36 30a12 12 0 0 1-24 0C12 22 18 15 24 6Z" fill="currentColor"/><path d="M19 30a6 6 0 0 0 5 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></symbol><symbol id="i-fertilizer" viewBox="0 0 48 48"><rect x="12" y="10" width="24" height="32" rx="4" fill="currentColor"/><rect x="12" y="10" width="24" height="7" rx="3" fill="currentColor" opacity=".6"/><circle cx="19" cy="26" r="2" fill="#fff" opacity=".85"/><circle cx="25" cy="30" r="2" fill="#fff" opacity=".85"/><circle cx="30" cy="25" r="2" fill="#fff" opacity=".85"/><circle cx="22" cy="35" r="2" fill="#fff" opacity=".85"/></symbol><symbol id="i-scissors" viewBox="0 0 48 48"><path d="M16 6L31 31M32 6L17 31" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="37" r="5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="34" cy="37" r="5" fill="none" stroke="currentColor" stroke-width="3"/></symbol><symbol id="i-note" viewBox="0 0 48 48"><rect x="10" y="7" width="28" height="34" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 17h14M17 24h14M17 31h9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol><symbol id="i-sparkle" viewBox="0 0 48 48"><path d="M24 5L27.5 20.5L43 24L27.5 27.5L24 43L20.5 27.5L5 24L20.5 20.5Z" fill="currentColor"/></symbol></defs></svg>
+<header><h1 id="pageTitle">カレンダー</h1><div class="month-pick" id="monthPickWrap"><button class="pill" id="pickBtn" type="button"><span id="pickYear"></span><span id="pickMonth"></span><span class="caret">▼</span></button><button class="today-btn" id="todayBtn" type="button">今日</button></div></header>
 
 <main>
   <section class="view active" id="view-calendar">
-    <div class="hero">
+    <div class="hero" id="hero">
       <div class="big" id="heroBig"></div>
       <div class="small" id="heroSmall"></div>
+      <div id="heroDetail" style="display:none;margin-top:8px;"></div>
     </div>
     <div class="cal-wrap">
       <div class="cal-head">
         <button class="secondary" id="prevM">‹</button>
-        <div class="month" id="monthLabel"></div>
+        
         <button class="secondary" id="nextM">›</button>
       </div>
       <div class="weekdays">
@@ -237,12 +300,12 @@ textarea { min-height: 70px; resize: vertical; }
       <button class="primary" id="addBtn">＋ 追加</button>
     </div>
     <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" style="display:none;">まだ植物が登録されていません。<br>「＋ 追加」から登録してみましょう 🌱</div>
+    <div class="empty" id="empty" style="display:none;">まだ植物が登録されていません。<br>「＋ 追加」から登録してみましょう</div>
   </section>
 
   <section class="view" id="view-growth">
     <div class="seg" id="gPlantWrap" style="margin-bottom:10px;">
-      <select id="gPlant" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);"></select>
+      <button id="gPlantBtn" type="button" class="plant-btn"></button>
     </div>
     <div class="seg" id="gMetric">
       <button data-metric="height" class="active">高さ</button>
@@ -252,6 +315,11 @@ textarea { min-height: 70px; resize: vertical; }
       <button data-range="1">1ヶ月</button>
       <button data-range="6" class="active">6ヶ月</button>
       <button data-range="12">12ヶ月</button>
+    </div>
+    <div class="period-nav">
+      <button class="secondary" id="gPrev" type="button">‹</button>
+      <div id="gPeriodLabel"></div>
+      <button class="secondary" id="gNext" type="button">›</button>
     </div>
     <div class="chart-box"><div id="chart"></div></div>
     <div class="summary" id="gSummary"></div>
@@ -268,18 +336,12 @@ textarea { min-height: 70px; resize: vertical; }
       </div>
     </div>
     <div class="setting-group">
-      <h3>文字の大きさ</h3>
-      <div class="opt-row" id="sizeOpts">
-        <button data-size-set="normal">標準</button>
-        <button data-size-set="large">大きめ</button>
-      </div>
-    </div>
-    <div class="setting-group">
       <h3>バックアップ</h3>
       <div class="hint">植物・記録・写真をまとめてファイルに書き出せます。</div>
       <div style="margin-top:10px;"><button class="primary" id="exportBtn">データを書き出す</button></div>
       <div id="exportFallback" style="display:none;">
         <textarea class="export-text" id="exportText" readonly></textarea>
+        <div style="margin-top:6px;"><button class="secondary" id="copyExport">内容をコピー</button></div>
         <div class="hint">ファイルを保存できない環境のため、内容をコピーして保存してください。</div>
       </div>
       <h3 style="margin-top:18px;">読み込み</h3>
@@ -295,17 +357,17 @@ textarea { min-height: 70px; resize: vertical; }
 </main>
 
 <nav class="tabbar">
-  <button data-tab="calendar" class="active"><span class="ico">📅</span>カレンダー</button>
-  <button data-tab="plants"><span class="ico">🪴</span>植物一覧</button>
-  <button data-tab="growth"><span class="ico">📈</span>あゆみ</button>
-  <button data-tab="settings"><span class="ico">⚙️</span>設定</button>
+  <button data-tab="calendar" class="active" aria-label="カレンダー"><span class="ico"><svg class="tab-ic" aria-hidden="true"><use href="#i-calendar"/></svg></span></button>
+  <button data-tab="plants" aria-label="植物一覧"><span class="ico"><svg class="tab-ic" aria-hidden="true"><use href="#i-plant"/></svg></span></button>
+  <button data-tab="growth" aria-label="成長グラフ"><span class="ico"><svg class="tab-ic" aria-hidden="true"><use href="#i-chart"/></svg></span></button>
+  <button data-tab="settings" aria-label="設定"><span class="ico"><svg class="tab-ic" aria-hidden="true"><use href="#i-gear"/></svg></span></button>
 </nav>
 
-<div class="overlay" id="editOverlay">
+<div class="overlay" id="editOverlay" style="z-index:21;">
   <div class="sheet">
     <h2 id="editTitle">植物を追加</h2>
     <label>名前</label>
-    <input type="text" id="fName" maxlength="30" placeholder="例：リビングのパキラ">
+    <input type="text" id="fName" maxlength="30">
     <label>種類の選び方</label>
     <div class="tabs">
       <button id="typeSelectTab" type="button" class="active">大分類・品種から選ぶ</button>
@@ -319,12 +381,12 @@ textarea { min-height: 70px; resize: vertical; }
       <input type="text" id="fVarOther" maxlength="30" placeholder="品種名を入力" style="display:none;margin-top:8px;">
     </div>
     <div id="textMode" style="display:none;">
-      <input type="text" id="fTypeText" maxlength="30" placeholder="例：モンステラ・デリシオサ">
+      <input type="text" id="fTypeText" maxlength="30">
     </div>
     <label>購入日・迎えた日（任意）</label>
     <input type="date" id="fAcquired">
     <label>水やりの間隔（任意・日）</label>
-    <input type="number" id="fInterval" min="1" max="365" placeholder="例：7">
+    <input type="number" id="fInterval" min="1" max="365">
     <div class="hint">空欄なら水やり予定は作りません。</div>
     <label>メモ（任意）</label>
     <textarea id="fMemo" maxlength="300"></textarea>
@@ -362,7 +424,7 @@ textarea { min-height: 70px; resize: vertical; }
     <label>写真（任意）</label>
     <input type="file" id="dPhoto" accept="image/*">
     <label>内容</label>
-    <textarea id="dText" maxlength="500" placeholder="新芽が出た、葉の色が良いなど"></textarea>
+    <textarea id="dText" maxlength="500"></textarea>
     <div class="btns">
       <button class="secondary" id="diaryCancel">キャンセル</button>
       <button class="primary" id="diarySave">保存</button>
@@ -372,20 +434,57 @@ textarea { min-height: 70px; resize: vertical; }
 
 <div class="overlay" id="dayOverlay">
   <div class="sheet">
-    <h2 id="dayTitle"></h2>
+    <div class="row-head" style="align-items:center;"><h2 id="dayTitle" style="margin:0;"></h2><button class="primary" id="dayAdd">＋ 記録する</button></div>
     <div id="dayBody"></div>
     <div class="btns">
       <button class="secondary" id="dayClose">閉じる</button>
-      <button class="primary" id="dayAdd">＋ 記録する</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="logOverlay">
+<div class="overlay" id="pickOverlay" style="z-index:21;">
+  <div class="sheet">
+    <h2>お世話の記録</h2>
+    <div class="hint">植物と内容は、どちらを先に選んでもかまいません。複数の植物はまとめて記録できます。</div>
+    <div id="pickPlants" style="margin-top:8px;"></div>
+    <div class="section"><h3>内容</h3><div class="action-grid" id="pickActions"></div></div>
+    <div class="btns"><button class="secondary" id="pickCancel">キャンセル</button><button class="primary" id="pickSave" disabled>保存</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="wheelOverlay">
+  <div class="sheet" style="max-width:340px;margin-top:auto;margin-bottom:auto;border-radius:20px;">
+    <div class="wheel-head">
+      <button class="secondary" id="wheelCancel">キャンセル</button>
+      <button class="primary" id="wheelOk">決定</button>
+    </div>
+    <div class="wheel-box">
+      <div class="wheel-band"></div>
+      <div class="wheel" id="wheelY"></div>
+      <div class="wheel" id="wheelM"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="plantPickOverlay">
+  <div class="sheet">
+    <h2>植物を選ぶ</h2>
+    <div class="hint">グラフを表示する植物をタップしてください</div>
+    <div id="gPickList" style="margin-top:8px;"></div>
+    <div class="btns"><button class="secondary" id="gPickCancel">閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="logOverlay" style="z-index:22;">
   <div class="sheet">
     <h2 id="logTitle">記録する</h2>
     <label>日付</label>
-    <input type="date" id="lDate">
+    <div class="day-nav">
+      <button class="secondary" id="lPrev" type="button">‹</button>
+      <div class="day-text" id="lDateText"></div>
+      <button class="secondary" id="lNext" type="button">›</button>
+    </div>
+    <input type="date" id="lDate" style="display:none;">
     <label>植物</label>
     <select id="lPlant"></select>
     <label>内容</label>
@@ -401,7 +500,7 @@ textarea { min-height: 70px; resize: vertical; }
     <img id="lPhotoPreview" class="photo-preview" alt="">
     <div style="margin-top:6px;"><button class="secondary" id="lPhotoClear" style="padding:4px 12px;font-size:12px;display:none;">写真を外す</button></div>
     <label>メモ（任意）</label>
-    <textarea id="lMemo" maxlength="200" placeholder="例：たっぷり与えた、葉が少し黄色い"></textarea>
+    <textarea id="lMemo" maxlength="200"></textarea>
     <div class="btns">
       <button class="secondary" id="logCancel">キャンセル</button>
       <button class="primary" id="logSave">保存</button>
@@ -442,64 +541,65 @@ textarea { min-height: 70px; resize: vertical; }
   const PHOTO_MAX = 480;      // 写真の最大辺(px)。容量を抑えるため小さめに圧縮
   const PHOTO_Q = 0.7;
 
+  const svgIcon = (id) => '<svg class="ic" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
   const CATS = {
-    "観葉植物": { icon: "🪴", color: "#d7f0dc", items: [
+    "観葉植物": { icon: svgIcon("foliage"), color: "#d7f0dc", items: [
       "パキラ", "モンステラ", "フィカス・ウンベラータ", "フィカス・ベンジャミン", "フィカス・ベンガレンシス", "ゴムの木",
       "ドラセナ（幸福の木）", "ドラセナ（コーンステッキ）", "ガジュマル", "ポトス", "ユッカ", "オーガスタ",
       "カラテア", "カポック", "シェフレラ", "アレカヤシ", "スパティフィラム", "アグラオネマ", "ディフェンバキア",
       "サンセベリア", "ストレリチア", "ネフロレピス", "ペペロミア", "ホヤ", "マランタ", "ヘデラ（アイビー）",
       "シンゴニウム", "アロカシア", "ピレア", "カラジウム", "ティランジア", "オリヅルラン"
     ]},
-    "塊根植物": { icon: "🥔", color: "#f3e3d3", items: [
+    "塊根植物": { icon: svgIcon("caudex"), color: "#f3e3d3", items: [
       "パキポディウム（ホリダム）", "パキポディウム（グラキリス）", "アデニウム（砂漠のバラ）", "オペルクリカリア",
       "ディオスコレア（亀甲竜）", "ブラキカリウム", "アダンソニア", "ユーフォルビア（塊根）", "ペラルゴニウム（塊根）",
       "ビヨナ", "モリンダ", "ピーナッツカクタス（ピーナッツ状の塊根）"
     ]},
-    "ヤシ類": { icon: "🌴", color: "#d4efe0", items: [
+    "ヤシ類": { icon: svgIcon("palm"), color: "#d4efe0", items: [
       "ワシントニアヤシ", "ロベレニーヤシ", "チャメドレア（テーブルヤシ）", "カリオタ（クジャクヤシ）", "ビロウ",
       "シュロ", "ココヤシ", "ヤシ（その他）"
     ]},
-    "常緑樹": { icon: "🌳", color: "#d2ead6", items: [
+    "常緑樹": { icon: svgIcon("evergreen"), color: "#d2ead6", items: [
       "ソテツ", "キンモクセイ", "ソヨゴ", "シマトネリコ", "ゴールドクレスト",
       "マサキ", "ツバキ", "サザンカ", "ヒイラギ", "シャリンバイ", "ヤマモモ", "オリーブ", "ベニカナメ",
       "ツゲ", "ナンテン", "アオキ"
     ]},
-    "多肉植物": { icon: "🌵", color: "#d6f5ea", items: [
+    "多肉植物": { icon: svgIcon("succulent"), color: "#d6f5ea", items: [
       "エケベリア", "セダム", "グラプトペタルム", "パキフィツム", "クラッスラ（金のなる木）", "アガベ", "アロエ",
       "ハオルチア", "リトープス", "ユーフォルビア", "カランコエ", "センペルビブム", "ハツユキカズラ", "千代田の松"
     ]},
-    "サボテン": { icon: "🌵", color: "#fde9c9", items: [
+    "サボテン": { icon: svgIcon("cactus"), color: "#fde9c9", items: [
       "マミラリア", "エキノカクタス（金鯱）", "エキノプシス", "ロフォフォラ（烏羽玉）", "ウチワサボテン",
       "柱サボテン（ペニオケレウス等）", "ギムノカリキウム", "アストロフィツム", "オプンティア"
     ]},
-    "ラン": { icon: "🌸", color: "#f8dcef", items: [
+    "ラン": { icon: svgIcon("orchid"), color: "#f8dcef", items: [
       "ファレノプシス（胡蝶蘭）", "カトレア", "デンドロビウム", "シンビジウム（東洋蘭）", "オンシジウム", "パフィオペディラム"
     ]},
-    "ハーブ": { icon: "🌿", color: "#dcf3c9", items: [
+    "ハーブ": { icon: svgIcon("herb"), color: "#dcf3c9", items: [
       "バジル", "ミント", "ローズマリー", "タイム", "ラベンダー", "パセリ", "レモンバーム", "カモミール", "セージ",
       "オレガノ", "ディル", "コリアンダー", "チャイブ", "ローリエ"
     ]},
-    "野菜": { icon: "🥬", color: "#d8efd0", items: [
+    "野菜": { icon: svgIcon("vegetable"), color: "#d8efd0", items: [
       "トマト", "ミニトマト", "キュウリ", "ナス", "ピーマン", "ししとう", "オクラ", "ズッキーニ", "レタス", "ほうれん草",
       "小松菜", "ねぎ", "にんじん", "大根", "かぶ", "じゃがいも", "さつまいも", "枝豆", "とうもろこし"
     ]},
-    "果樹": { icon: "🍋", color: "#ffe7c2", items: [
+    "果樹": { icon: svgIcon("fruit"), color: "#ffe7c2", items: [
       "レモン", "ミカン（温州）", "キンカン", "ブルーベリー", "いちご", "イチジク", "ブドウ", "キウイ",
       "アボカド", "グアバ", "ザクロ", "ブラックベリー"
     ]},
-    "花（草花）": { icon: "🌼", color: "#ffd9e4", items: [
+    "花（草花）": { icon: svgIcon("flower"), color: "#ffd9e4", items: [
       "ペチュニア", "パンジー", "ビオラ", "マリーゴールド", "ゼラニウム", "ガーベラ", "バラ", "アジサイ", "菊", "カーネーション",
       "百日草", "ジニア", "サルビア", "インパチェンス", "ニチニチソウ", "シクラメン", "ポインセチア", "ハイビスカス",
       "ブーゲンビリア", "クレマチス", "ランタナ", "ベゴニア"
     ]},
-    "球根植物": { icon: "🌷", color: "#fff3c4", items: [
+    "球根植物": { icon: svgIcon("bulb"), color: "#fff3c4", items: [
       "チューリップ", "ヒヤシンス", "ユリ", "スイセン", "ダリア", "アネモネ", "ラナンキュラス", "グラジオラス",
       "アマリリス", "フリージア", "クロッカス"
     ]},
-    "シダ類": { icon: "🌿", color: "#cdeedd", items: [
+    "シダ類": { icon: svgIcon("fern"), color: "#cdeedd", items: [
       "ネフロレピス（タマシダ）", "ビカクシダ", "ボストンファーン", "アジアンタム", "ヘゴ（木性シダ）"
     ]},
-    "その他": { icon: "🌱", color: "#e6e9ef", items: [] }
+    "その他": { icon: svgIcon("sprout"), color: "#e6e9ef", items: [] }
   };
   const CAT_ORDER = ["サボテン", "塊根植物", "多肉植物", "観葉植物", "ヤシ類", "シダ類", "常緑樹"];
   const CAT_NAMES = CAT_ORDER.concat(Object.keys(CATS).filter((c) => !CAT_ORDER.includes(c)));
@@ -509,6 +609,8 @@ textarea { min-height: 70px; resize: vertical; }
   let logPhotoData = null;
   let gMetric = "height";
   let gRange = 6;
+  let gPlantId = null;
+  let gShift = 0;
   let viewYear, viewMonth;
 
   const $ = (id) => document.getElementById(id);
@@ -573,7 +675,6 @@ textarea { min-height: 70px; resize: vertical; }
   function applySettings() {
     const s = state.settings;
     document.documentElement.dataset.theme = s.theme === "system" ? "" : s.theme;
-    document.documentElement.dataset.size = s.size;
     document.querySelectorAll("[data-theme-set]").forEach((b) => b.classList.toggle("active", b.dataset.themeSet === s.theme));
     document.querySelectorAll("[data-size-set]").forEach((b) => b.classList.toggle("active", b.dataset.sizeSet === s.size));
   }
@@ -630,33 +731,81 @@ textarea { min-height: 70px; resize: vertical; }
   }
 
   // ---------- タブ ----------
-  const TITLES = { calendar: "🌿 カレンダー", plants: "🌿 植物一覧", growth: "🌿 あゆみ", settings: "🌿 設定" };
+  const TITLES = { calendar: "カレンダー", plants: "植物一覧", growth: "成長グラフ", settings: "設定" };
   function showTab(name) {
     document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + name));
     document.querySelectorAll(".tabbar button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-    $("pageTitle").textContent = TITLES[name];
+    updateHeader(name);
     window.scrollTo(0, 0);
     renderAll();
   }
 
   // ---------- ヒーロー・カレンダー ----------
+  let heroOpen = false;
   function renderHero() {
     const today = todayStr();
-    const due = state.plants.filter((p) => {
+    const dueList = state.plants.filter((p) => {
       const n = nextWaterDate(p);
       return n && daysBetween(today, n) <= 0;
-    }).length;
-    const todayLogs = state.logs.filter((l) => l.date === today).length;
+    });
     if (state.plants.length === 0) {
-      $("heroBig").textContent = "ようこそ 🌱";
+      $("heroBig").innerHTML = "ようこそ " + svgIcon("sprout");
       $("heroSmall").textContent = "植物を登録して、お世話の記録を始めましょう。";
-    } else {
-      $("heroBig").textContent = due > 0 ? "今日の水やり：" + due + "株" : "今日の水やりはありません";
-      $("heroSmall").textContent = "今日の記録 " + todayLogs + "件 ・ 登録 " + state.plants.length + "株";
+      $("heroDetail").style.display = "none";
+      return;
     }
+    const todayLogs = state.logs.filter((l) => l.date === today).length;
+    $("heroBig").innerHTML = dueList.length > 0 ? svgIcon("drop") + " 今日の水やり：" + dueList.length + "株" : "今日の水やりはありません";
+    $("heroSmall").textContent = "今日の記録 " + todayLogs + "件" + (dueList.length ? "（タップで一覧）" : "");
+    $("heroDetail").innerHTML = dueList.map((p) => {
+      const diff = daysBetween(today, nextWaterDate(p));
+      const st = diff < 0 ? "水やり" + (-diff) + "日超過" : "今日";
+      return '<div class="item" style="padding:6px 0;"><span>' + escapeHtml(p.name) + '</span><small>' + st + '</small></div>';
+    }).join("");
+    $("heroDetail").style.display = heroOpen && dueList.length ? "block" : "none";
+  }
+
+  function fillMonthPick() {
+    $("pickYear").textContent = viewYear + "年";
+    $("pickMonth").textContent = (viewMonth + 1) + "月";
+  }
+  function fillWheel(id, from, to, suffix) {
+    const el = $(id);
+    el.dataset.from = from;
+    let html = "";
+    for (let v = from; v <= to; v++) html += '<div class="wi">' + v + suffix + '</div>';
+    el.innerHTML = html;
+  }
+  function wheelValue(id) {
+    const el = $(id);
+    const idx = Math.round(el.scrollTop / 40);
+    const max = el.children.length - 1;
+    return Number(el.dataset.from) + Math.max(0, Math.min(max, idx));
+  }
+  function markWheel(id) {
+    const el = $(id);
+    const v = wheelValue(id);
+    [...el.children].forEach((c, i) => c.classList.toggle("on", i === v - Number(el.dataset.from)));
+  }
+  function scrollWheelTo(id, value) {
+    const el = $(id);
+    el.scrollTop = (value - Number(el.dataset.from)) * 40;
+    markWheel(id);
+  }
+  function openWheel() {
+    fillWheel("wheelY", 2000, 2099, "年");
+    fillWheel("wheelM", 1, 12, "月");
+    $("wheelOverlay").classList.add("open");
+    scrollWheelTo("wheelY", viewYear);
+    scrollWheelTo("wheelM", viewMonth + 1);
+  }
+  function updateHeader(name) {
+    $("pageTitle").style.display = name === "calendar" ? "none" : "";
+    $("monthPickWrap").style.display = name === "calendar" ? "flex" : "none";
+    $("pageTitle").textContent = TITLES[name];
   }
   function renderCalendar() {
-    $("monthLabel").textContent = viewYear + "年" + (viewMonth + 1) + "月";
+    fillMonthPick();
     const first = new Date(viewYear, viewMonth, 1).getDay();
     const days = new Date(viewYear, viewMonth + 1, 0).getDate();
     const today = todayStr();
@@ -705,40 +854,45 @@ textarea { min-height: 70px; resize: vertical; }
       const thumb = photo ? '<img src="' + photo + '" alt="">' : CATS[catOf(p)].icon;
       return '<button class="card" data-id="' + p.id + '" style="' + plantStyle(p) + '">' +
         '<div class="thumb">' + thumb + '</div>' +
-        '<div class="name">' + escapeHtml(p.name) + '</div>' +
-        '<div class="sub">' + escapeHtml(plantLabel(p)) + '</div>' + badge + '</button>';
+        '<div class="info"><div class="name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="sub">' + escapeHtml(plantLabel(p)) + '</div></div>' + badge + '</button>';
     }).join("");
   }
 
-  // ---------- あゆみ（成長グラフ） ----------
+  // ---------- 成長グラフ ----------
   function renderGrowthSelect() {
-    const sel = $("gPlant");
-    const prev = sel.value;
-    sel.innerHTML = state.plants.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>').join("");
-    if (state.plants.some((p) => p.id === prev)) sel.value = prev;
+    if (!state.plants.some((p) => p.id === gPlantId)) gPlantId = state.plants.length ? state.plants[0].id : null;
+    const p = state.plants.find((x) => x.id === gPlantId);
+    $("gPlantBtn").innerHTML = p
+      ? CATS[catOf(p)].icon + " " + escapeHtml(p.name) + ' <span class="caret">▼</span>'
+      : '植物を選ぶ <span class="caret">▼</span>';
     document.querySelectorAll("#gMetric button").forEach((b) => b.classList.toggle("active", b.dataset.metric === gMetric));
     document.querySelectorAll("#gRange button").forEach((b) => b.classList.toggle("active", Number(b.dataset.range) === gRange));
+    $("gNext").disabled = gShift >= 0;
   }
+  function fmtSlash(d) { return d.slice(0, 4) + "/" + d.slice(5, 7) + "/" + d.slice(8, 10); }
   function renderGrowth() {
     renderGrowthSelect();
-    const p = state.plants.find((x) => x.id === $("gPlant").value);
+    const p = state.plants.find((x) => x.id === gPlantId);
+    const now = new Date();
+    const endDate = new Date(now.getFullYear(), now.getMonth() + gShift * gRange, now.getDate());
+    const cutoffDate = new Date(endDate.getFullYear(), endDate.getMonth() - gRange, endDate.getDate());
+    const endS = ymd(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    const cutS = ymd(cutoffDate.getFullYear(), cutoffDate.getMonth(), cutoffDate.getDate());
+    $("gPeriodLabel").textContent = fmtSlash(cutS) + " 〜 " + fmtSlash(endS);
+
     if (!p) {
       $("chart").innerHTML = '<div class="empty">植物を登録すると、ここで成長の推移を確認できます。</div>';
       $("gSummary").innerHTML = ""; $("gList").innerHTML = "";
       return;
     }
-    const now = new Date();
-    const cutoffDate = new Date(now.getFullYear(), now.getMonth() - gRange, now.getDate());
-    const cutoff = ymd(cutoffDate.getFullYear(), cutoffDate.getMonth(), cutoffDate.getDate());
-    const pts = state.logs
-      .filter((l) => l.plantId === p.id && l[gMetric] && l.date >= cutoff)
-      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     const label = gMetric === "height" ? "高さ" : "直径";
-
+    const pts = state.logs
+      .filter((l) => l.plantId === p.id && l[gMetric] && l.date >= cutS && l.date <= endS)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     if (pts.length === 0) {
-      $("chart").innerHTML = '<div class="empty" style="padding:30px 0;">直近' + gRange + 'ヶ月の「' + label + '」の記録はありません。<br>記録画面で' + label + 'を入れると、ここにグラフが表示されます。</div>';
-      $("gSummary").innerHTML = "";
-      $("gList").innerHTML = "";
+      $("chart").innerHTML = '<div class="empty" style="padding:30px 0;">この期間の「' + label + '」の記録はありません。<br>記録画面で' + label + 'を入れると、ここにグラフが表示されます。</div>';
+      $("gSummary").innerHTML = ""; $("gList").innerHTML = "";
       return;
     }
 
@@ -748,9 +902,8 @@ textarea { min-height: 70px; resize: vertical; }
     const maxV = Math.max.apply(null, vals);
     const yMax = maxV > 0 ? Math.ceil(maxV * 1.15) : 10;
     const times = pts.map((l) => new Date(l.date + "T00:00:00").getTime());
-    // X軸は選んだ期間全体（開始日〜今日）を使う
     const t0 = cutoffDate.getTime();
-    const t1 = new Date(ymd(now.getFullYear(), now.getMonth(), now.getDate()) + "T00:00:00").getTime();
+    const t1 = new Date(endS + "T00:00:00").getTime();
     const xOf = (t) => padL + (W - padL - padR) * ((t - t0) / Math.max(1, t1 - t0));
     const yOf = (v) => padT + (H - padT - padB) * (1 - v / yMax);
 
@@ -768,9 +921,9 @@ textarea { min-height: 70px; resize: vertical; }
       const x = xOf(times[i]), y = yOf(l[gMetric]);
       svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" style="fill:var(--accent);stroke:var(--surface)" stroke-width="2"/>';
     });
-    const fmt = (d) => d.slice(5).replace("-", "/");
-    svg += '<text x="' + padL + '" y="' + (H - 8) + '" font-size="10" style="fill:var(--muted)">' + fmt(cutoff) + '</text>';
-    svg += '<text x="' + (W - padR) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" style="fill:var(--muted)">' + fmt(ymd(now.getFullYear(), now.getMonth(), now.getDate())) + '</text>';
+    const short = (d) => d.slice(5).replace("-", "/");
+    svg += '<text x="' + padL + '" y="' + (H - 8) + '" font-size="10" style="fill:var(--muted)">' + short(cutS) + '</text>';
+    svg += '<text x="' + (W - padR) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" style="fill:var(--muted)">' + short(endS) + '</text>';
     svg += '</svg>';
     $("chart").innerHTML = svg;
 
@@ -779,11 +932,22 @@ textarea { min-height: 70px; resize: vertical; }
     $("gSummary").innerHTML =
       '<div class="stat">最新<b>' + last + 'mm</b></div>' +
       '<div class="stat">記録回数<b>' + pts.length + '回</b></div>' +
-      '<div class="stat">' + label + 'の変化<b>' + (diff >= 0 ? "+" : "") + diff + 'mm</b></div>';
-
+      '<div class="stat">期間内の' + label + '変化<b>' + (diff >= 0 ? "+" : "") + diff + 'mm</b></div>';
     $("gList").innerHTML = '<h3>記録一覧</h3>' + pts.slice().reverse().map((l) =>
       '<div class="item"><span>' + escapeHtml(l.date) + '</span><span class="measure">' + escapeHtml(measureText(l) || label + ' ' + l[gMetric] + 'mm') + '</span></div>'
     ).join("");
+  }
+  function openPlantPick() {
+    if (state.plants.length === 0) { toast("先に植物を登録してください"); return; }
+    $("gPickList").innerHTML = state.plants.map((p) => {
+      const photo = p.photo || latestLogPhoto(p.id);
+      const thumb = photo ? '<img src="' + photo + '" alt="">' : CATS[catOf(p)].icon;
+      return '<div class="pick-row' + (p.id === gPlantId ? ' selected' : '') + '" data-gp="' + p.id + '" style="' + plantStyle(p) + '">' +
+        '<div class="pick-avatar">' + thumb + '</div>' +
+        '<div class="pick-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="radio"></div></div>';
+    }).join("");
+    $("plantPickOverlay").classList.add("open");
   }
 
   // ---------- 設定 ----------
@@ -796,7 +960,7 @@ textarea { min-height: 70px; resize: vertical; }
   // ---------- 植物の追加・編集 ----------
   function fillCategorySelect(selected) {
     $("fCat").innerHTML = CAT_NAMES.map((c) => '<option value="' + c + '">' + CATS[c].icon + " " + c + '</option>').join("");
-    $("fCat").value = CATS[selected] ? selected : "観葉植物";
+    $("fCat").value = CATS[selected] ? selected : "サボテン";
     fillVarSelect(null);
   }
   function fillVarSelect(selectedVar) {
@@ -828,12 +992,12 @@ textarea { min-height: 70px; resize: vertical; }
       fillVarSelect(p.type || null);
       setTypeMode("select");
     } else if (p && p.type) {
-      fillCategorySelect("観葉植物");
+      fillCategorySelect("サボテン");
       fillVarSelect(null);
       $("fTypeText").value = p.type;
       setTypeMode("text");
     } else {
-      fillCategorySelect("観葉植物");
+      fillCategorySelect("サボテン");
       fillVarSelect(null);
       $("fTypeText").value = "";
       setTypeMode("select");
@@ -956,9 +1120,9 @@ textarea { min-height: 70px; resize: vertical; }
     if (wb) wb.onclick = () => {
       p.lastWatered = todayStr();
       state.logs.push({ id: uid(), date: todayStr(), plantId: p.id, action: "水やり", memo: "", height: null, diameter: null });
-      if (save()) { renderAll(); openDetail(id); toast("水やりを記録しました 💧"); }
+      if (save()) { renderAll(); openDetail(id); toast("水やりを記録しました"); }
     };
-    $("addLogBtn").onclick = () => openLog(todayStr(), null, p.id);
+    $("addLogBtn").onclick = () => openPicker(todayStr(), p.id);
     $("detailBody").querySelectorAll("[data-hist]").forEach((b) => {
       b.onclick = () => openHistory(p.id, b.dataset.hist);
     });
@@ -1052,7 +1216,7 @@ textarea { min-height: 70px; resize: vertical; }
     $("dayBody").innerHTML = list.length
       ? list.map((l) => {
           const p = state.plants.find((x) => x.id === l.plantId);
-          const icon = p ? CATS[catOf(p)].icon : "🌱";
+          const icon = p ? CATS[catOf(p)].icon : svgIcon("sprout");
           const m = measureText(l);
           return '<div class="item"><span>' + icon + ' <b>' + escapeHtml(plantName(l.plantId)) + '</b> ・ ' + escapeHtml(l.action) +
             (m ? '<br><span class="measure">' + escapeHtml(m) + '</span>' : '') +
@@ -1081,6 +1245,38 @@ textarea { min-height: 70px; resize: vertical; }
     });
   }
 
+  // ---------- 記録の選択画面 ----------
+  const ACTION_STYLE = {
+    "水やり": { i: svgIcon("drop"), c: "#cfe8ff" }, "植え替え": { i: svgIcon("plant"), c: "#f3e3d3" },
+    "肥料": { i: svgIcon("fertilizer"), c: "#fff3c4" }, "剪定": { i: svgIcon("scissors"), c: "#d7f0dc" },
+    "様子メモ": { i: svgIcon("note"), c: "#ffd9e4" }, "その他": { i: svgIcon("sparkle"), c: "#e6e9ef" }
+  };
+  let pickDate = null, pickPlantIds = [], pickAction = null;
+  function openPicker(date, presetPlantId) {
+    if (state.plants.length === 0) { toast("先に植物を登録してください"); return; }
+    pickDate = date;
+    pickPlantIds = presetPlantId ? [presetPlantId] : [];
+    pickAction = null;
+    renderPicker();
+    $("pickOverlay").classList.add("open");
+  }
+  function renderPicker() {
+    $("pickPlants").innerHTML = state.plants.map((p) => {
+      const photo = p.photo || latestLogPhoto(p.id);
+      const thumb = photo ? '<img src="' + photo + '" alt="">' : CATS[catOf(p)].icon;
+      return '<div class="pick-row' + (pickPlantIds.includes(p.id) ? ' selected' : '') + '" data-pick="' + p.id + '" style="' + plantStyle(p) + '">' +
+        '<div class="pick-avatar">' + thumb + '</div>' +
+        '<div class="pick-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="radio"></div></div>';
+    }).join("");
+    if (pickAction === "その他" && pickPlantIds.length > 1) pickAction = null;
+    $("pickSave").disabled = !(pickAction && pickPlantIds.length >= 1);
+    $("pickSave").textContent = "記録";
+    $("pickActions").innerHTML = ACTIONS.filter((a) => !(a === "その他" && pickPlantIds.length > 1)).map((a) =>
+      '<button class="action-tile' + (pickAction === a ? ' on' : '') + '" data-action="' + a + '" style="--c:' + ACTION_STYLE[a].c + ';">' +
+      '<span class="ei">' + ACTION_STYLE[a].i + '</span>' + a + '</button>').join("");
+  }
+
   // ---------- 記録の追加・編集 ----------
   function setLogPhoto(data) {
     logPhotoData = data;
@@ -1094,15 +1290,29 @@ textarea { min-height: 70px; resize: vertical; }
       $("lPhotoClear").style.display = "none";
     }
   }
-  function openLog(date, log, presetPlantId) {
+  function fmtDate(v) {
+    const [y, m, d] = v.split("-").map(Number);
+    return y + "年" + m + "月" + d + "日（" + WD[new Date(y, m - 1, d).getDay()] + "）";
+  }
+  function setLogDate(v) {
+    $("lDate").value = v;
+    $("lDateText").textContent = fmtDate(v);
+  }
+  function shiftLogDate(delta) {
+    const [y, m, d] = $("lDate").value.split("-").map(Number);
+    const dt = new Date(y, m - 1, d + delta);
+    setLogDate(ymd(dt.getFullYear(), dt.getMonth(), dt.getDate()));
+  }
+
+  function openLog(date, log, presetPlantId, presetAction) {
     if (state.plants.length === 0) { toast("先に植物を登録してください"); return; }
     logEditId = log ? log.id : null;
     $("logTitle").textContent = log ? "記録を編集" : "記録する";
-    $("lDate").value = date;
+    setLogDate(date);
     $("lPlant").innerHTML = state.plants.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>').join("");
     $("lPlant").value = log ? log.plantId : (presetPlantId || state.plants[0].id);
     $("lAction").innerHTML = ACTIONS.map((a) => '<option value="' + a + '">' + a + '</option>').join("");
-    $("lAction").value = log ? log.action : "水やり";
+    $("lAction").value = log ? log.action : (presetAction || "水やり");
     $("lHeight").value = log && log.height ? log.height : "";
     $("lDia").value = log && log.diameter ? log.diameter : "";
     $("lMemo").value = log ? log.memo : "";
@@ -1133,7 +1343,7 @@ textarea { min-height: 70px; resize: vertical; }
       toast("更新しました");
     } else {
       state.logs.push(Object.assign({ id: uid() }, data));
-      toast("記録しました 🌱");
+      toast("記録しました");
     }
     if (action === "水やり") {
       const p = state.plants.find((x) => x.id === plantId);
@@ -1141,6 +1351,7 @@ textarea { min-height: 70px; resize: vertical; }
     }
     if (!save()) return;
     closeOverlay("logOverlay");
+    closeOverlay("pickOverlay");
     dayKey = date;
     renderAll();
     if (detailId) openDetail(detailId);
@@ -1164,17 +1375,44 @@ textarea { min-height: 70px; resize: vertical; }
     const filename = "plant-manager-" + todayStr() + ".json";
     const dl = await getCap("downloads");
     if (dl) {
+      try { await dl.save({ filename, data: json }); toast("書き出しました"); return; }
+      catch (e) { if (e && e.code === "declined") return; }
+    }
+    const file = new File([json], filename, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await dl.save({ filename, data: json });
-        toast("書き出しました 💾");
+        await navigator.share({ files: [file], title: "Verdant Log のバックアップ" });
+        toast("書き出しました");
         return;
       } catch (e) {
-        if (e && e.code === "declined") return;
+        if (e && e.name === "AbortError") return;
       }
     }
+    try {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch (e) { /* 次の表示で対応 */ }
     $("exportText").value = json;
     $("exportFallback").style.display = "block";
-    toast("ファイルを保存できないため、内容を表示しました");
+    toast("保存できない場合は、下の「内容をコピー」を使ってください");
+  }
+  async function copyExport() {
+    const t = $("exportText");
+    try {
+      await navigator.clipboard.writeText(t.value);
+      toast("コピーしました");
+    } catch (e) {
+      t.focus();
+      t.select();
+      try { document.execCommand("copy"); toast("コピーしました"); }
+      catch (err) { toast("長押しで選択してコピーしてください"); }
+    }
   }
   async function importFile(e) {
     const f = e.target.files[0];
@@ -1183,7 +1421,7 @@ textarea { min-height: 70px; resize: vertical; }
     let obj;
     try { obj = JSON.parse(await f.text()); } catch (err) { toast("ファイルを読み込めませんでした"); return; }
     const d = obj && obj.data;
-    if (!d || !Array.isArray(d.plants) || !Array.isArray(d.logs)) { toast("植物管理のバックアップファイルではありません"); return; }
+    if (!d || !Array.isArray(d.plants) || !Array.isArray(d.logs)) { toast("Verdant Log のバックアップファイルではありません"); return; }
     askConfirm("現在のデータを、選んだファイルの内容に置き換えます。よろしいですか？", () => {
       state.plants = d.plants.slice(0, MAX_PLANTS);
       state.logs = d.logs;
@@ -1203,6 +1441,26 @@ textarea { min-height: 70px; resize: vertical; }
     const b = e.target.closest("[data-tab]");
     if (b) showTab(b.dataset.tab);
   };
+  $("pickBtn").onclick = openWheel;
+  $("todayBtn").onclick = () => {
+    const n = new Date();
+    viewYear = n.getFullYear();
+    viewMonth = n.getMonth();
+    renderCalendar();
+  };
+  $("wheelCancel").onclick = () => closeOverlay("wheelOverlay");
+  $("wheelOk").onclick = () => {
+    viewYear = wheelValue("wheelY");
+    viewMonth = wheelValue("wheelM") - 1;
+    closeOverlay("wheelOverlay");
+    renderCalendar();
+  };
+  $("wheelY").addEventListener("scroll", () => markWheel("wheelY"));
+  $("wheelM").addEventListener("scroll", () => markWheel("wheelM"));
+  $("hero").onclick = () => {
+    heroOpen = !heroOpen;
+    renderHero();
+  };
   $("prevM").onclick = () => moveMonth(-1);
   $("nextM").onclick = () => moveMonth(1);
   $("calGrid").onclick = (e) => {
@@ -1216,7 +1474,19 @@ textarea { min-height: 70px; resize: vertical; }
     if (card) openDetail(card.dataset.id);
   };
 
-  $("gPlant").onchange = renderGrowth;
+  $("gPlantBtn").onclick = openPlantPick;
+  $("gPickList").onclick = (e) => {
+    const r = e.target.closest("[data-gp]");
+    if (!r) return;
+    gPlantId = r.dataset.gp;
+    gShift = 0;
+    closeOverlay("plantPickOverlay");
+    renderGrowth();
+  };
+  $("gPickCancel").onclick = () => closeOverlay("plantPickOverlay");
+  $("gPrev").onclick = () => { gShift -= 1; renderGrowth(); };
+  $("gNext").onclick = () => { if (gShift < 0) { gShift += 1; renderGrowth(); } };
+  $("gRange").addEventListener("click", () => { gShift = 0; renderGrowth(); });
   $("gRange").onclick = (e) => {
     const b = e.target.closest("[data-range]");
     if (!b) return;
@@ -1236,13 +1506,8 @@ textarea { min-height: 70px; resize: vertical; }
     state.settings.theme = b.dataset.themeSet;
     save(); applySettings();
   };
-  $("sizeOpts").onclick = (e) => {
-    const b = e.target.closest("[data-size-set]");
-    if (!b) return;
-    state.settings.size = b.dataset.sizeSet;
-    save(); applySettings();
-  };
   $("exportBtn").onclick = exportData;
+  $("copyExport").onclick = copyExport;
   $("importFile").onchange = importFile;
 
   $("fCat").onchange = () => fillVarSelect(null);
@@ -1255,7 +1520,6 @@ textarea { min-height: 70px; resize: vertical; }
   $("detailClose").onclick = () => closeOverlay("detailOverlay");
   $("editBtn").onclick = () => {
     const p = state.plants.find((x) => x.id === detailId);
-    closeOverlay("detailOverlay");
     if (p) openEdit(p);
   };
   $("deleteBtn").onclick = () => {
@@ -1277,12 +1541,60 @@ textarea { min-height: 70px; resize: vertical; }
   $("askOverlay").addEventListener("click", (e) => { if (e.target.id === "askOverlay") closeAsk(); });
 
   $("historyClose").onclick = () => closeOverlay("historyOverlay");
+  $("pickCancel").onclick = () => { pickAction = null; closeOverlay("pickOverlay"); };
+  $("pickPlants").onclick = (e) => {
+    const r = e.target.closest("[data-pick]");
+    if (!r) return;
+    const id = r.dataset.pick;
+    pickPlantIds = pickPlantIds.includes(id) ? pickPlantIds.filter((x) => x !== id) : pickPlantIds.concat(id);
+    renderPicker();
+  };
+  $("pickActions").onclick = (e) => {
+    const b = e.target.closest("[data-action]");
+    if (!b) return;
+    const action = b.dataset.action;
+    if (pickPlantIds.length === 0) { pickAction = action; renderPicker(); return; }
+    if (pickPlantIds.length === 1) {
+      openLog(pickDate, null, pickPlantIds[0], action);
+      return;
+    }
+    pickAction = action;
+    renderPicker();
+  };
+  $("pickSave").onclick = () => {
+    if (!pickAction || pickPlantIds.length < 1) return;
+    if (pickPlantIds.length === 1) {
+      openLog(pickDate, null, pickPlantIds[0], pickAction);
+      return;
+    }
+    const action = pickAction;
+    // 複数選択時は日付と内容だけをまとめて記録（サイズ・写真・メモは入れない）
+    pickPlantIds.forEach((id) => {
+      state.logs.push({ id: uid(), date: pickDate, plantId: id, action, memo: "", height: null, diameter: null, photo: null });
+      if (action === "水やり") {
+        const p = state.plants.find((x) => x.id === id);
+        if (p && (!p.lastWatered || pickDate > p.lastWatered)) p.lastWatered = pickDate;
+      }
+    });
+    const n = pickPlantIds.length;
+    if (!save()) return;
+    pickAction = null;
+    closeOverlay("pickOverlay");
+    dayKey = pickDate;
+    renderAll();
+    if (detailId) openDetail(detailId);
+    if (!$("dayOverlay").classList.contains("open")) openDay(pickDate);
+    else renderDay();
+    toast(n + "株に記録しました");
+  };
   $("diaryCancel").onclick = () => closeOverlay("diaryOverlay");
   $("diarySave").onclick = saveDiary;
 
   $("dayClose").onclick = () => closeOverlay("dayOverlay");
-  $("dayAdd").onclick = () => openLog(dayKey, null, null);
+  $("dayAdd").onclick = () => openPicker(dayKey, null);
   $("logCancel").onclick = () => closeOverlay("logOverlay");
+  $("lPrev").onclick = () => shiftLogDate(-1);
+  $("lNext").onclick = () => shiftLogDate(1);
   $("logSave").onclick = saveLog;
   $("lPhoto").onchange = async (e) => {
     const f = e.target.files[0];
@@ -1293,17 +1605,62 @@ textarea { min-height: 70px; resize: vertical; }
   $("lPhotoClear").onclick = () => { setLogPhoto(null); $("lPhoto").value = ""; };
   $("photoClose").onclick = () => closeOverlay("photoOverlay");
 
-  ["editOverlay", "detailOverlay", "historyOverlay", "diaryOverlay", "dayOverlay", "logOverlay", "photoOverlay"].forEach((id) => {
+  ["editOverlay", "detailOverlay", "historyOverlay", "diaryOverlay", "dayOverlay", "pickOverlay", "wheelOverlay", "plantPickOverlay", "logOverlay", "photoOverlay"].forEach((id) => {
     $(id).addEventListener("click", (e) => {
       if (e.target.id === id) closeOverlay(id);
     });
   });
+
+  // ---------- 左から右へのスワイプで1つ前の画面へ戻る（記録・植物の追加/編集・記録する植物選択） ----------
+  ["editOverlay", "pickOverlay", "logOverlay"].forEach((id) => {
+    const el = $(id);
+    let sx = 0, sy = 0, st = 0, active = false;
+    el.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) { active = false; return; }
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      st = Date.now();
+      active = true;
+    }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      if (!active) return;
+      active = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (dx > 80 && Math.abs(dy) < 60 && Date.now() - st < 700) {
+        if (isField(document.activeElement)) document.activeElement.blur();
+        closeOverlay(id);
+      }
+    }, { passive: true });
+  });
+
+  // ---------- キーボードを閉じる ----------
+  document.querySelectorAll(".sheet").forEach((sh) => {
+    sh.insertAdjacentHTML("afterbegin", '<div class="kb-row"><button class="kb-done" type="button">完了</button></div>');
+  });
+  document.querySelectorAll(".kb-done").forEach((b) => {
+    b.addEventListener("click", () => { if (document.activeElement) document.activeElement.blur(); });
+  });
+  document.querySelectorAll("input, textarea").forEach((el) => { el.enterKeyHint = "done"; });
+  const isField = (el) => !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+  document.addEventListener("focusin", (e) => { if (isField(e.target)) document.body.classList.add("kb-open"); });
+  document.addEventListener("focusout", () => {
+    setTimeout(() => { if (!isField(document.activeElement)) document.body.classList.remove("kb-open"); }, 50);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "file") e.target.blur();
+  });
+  document.addEventListener("pointerdown", (e) => {
+    const a = document.activeElement;
+    if (isField(a) && !isField(e.target) && e.target.tagName !== "SELECT") a.blur();
+  }, true);
 
   const now = new Date();
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
   load();
   applySettings();
+  updateHeader("calendar");
   renderAll();
 })();
 </script>
